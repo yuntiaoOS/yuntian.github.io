@@ -152,6 +152,486 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-python-error-list" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="解决SyntaxError-Non-ASCII-character-‘-xe7’-in-file-demo-py-on-line-15问题"><a href="#解决SyntaxError-Non-ASCII-character-‘-xe7’-in-file-demo-py-on-line-15问题" class="headerlink" title="解决SyntaxError: Non-ASCII character ‘\xe7’ in file demo.py on line 15问题"></a>解决SyntaxError: Non-ASCII character ‘\xe7’ in file demo.py on line 15问题</h1><p>2017年11月03日 09:45:20</p>
+<p>coloriy</p>
+<p>阅读数：432</p>
+<p>更多</p>
+<p>个人分类： <a href="https://blog.csdn.net/coloriy/article/category/5593055" target="_blank" rel="noopener">Python</a></p>
+<p>File “demo.py”, line 14 </p>
+<p>SyntaxError: Non-ASCII character ‘\xe7’ in file demo.py on line 15, but no encoding declared; see <a href="http://python.org/dev/peps/pep-0263/" target="_blank" rel="noopener">http://python.org/dev/peps/pep-0263/</a> for details</p>
+<p>出现这种错的解决办法：</p>
+<p>在文件头上加上：<br># -<em>- coding: cp936 -</em>-<br>或者<br># -<em>- coding: utf-8 -</em></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/11/06/python-error-list/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-iOS开发，Bluetooth" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="iOS开发，Bluetooth你应该了解一些！"><a href="#iOS开发，Bluetooth你应该了解一些！" class="headerlink" title="iOS开发，Bluetooth你应该了解一些！"></a>iOS开发，Bluetooth你应该了解一些！</h1><h5 id="API结构导图"><a href="#API结构导图" class="headerlink" title="API结构导图"></a>API结构导图</h5><p>CoreBluetooth中，需要用到的类和协议(<a href="http://naotu.baidu.com/file/a7b67ad12fd379103db71d2ea35f9080?token=4fdcb2755acfd01e" target="_blank" rel="noopener">完整导图</a>)：</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/1363078-16362e887fcb9d5f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="CoreBluetooth.png"></p>
+<h1 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h1><p>蓝牙分类中心端和外设端(<a href="http://naotu.baidu.com/file/864fea879418707714d77277a8ab76df?token=c2ba5a945ea7befd" target="_blank" rel="noopener">完整导图</a>)。</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/1363078-8028233a8fed5776.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Bluetooth.png"></p>
+<p><strong>中心端（接收端）</strong></p>
+<blockquote>
+<p>1 .创建中心端控制器（CBCentralManager)<br>2 .扫描设备（Discover）<br>3 .连接 （Connect）<br>4 .获取Service和Characteristic</p>
+<ul>
+<li>扫描Service （一个service中包含一个或多个Characteristic）</li>
+<li>获取Service中Characteristic</li>
+<li>获取Characteristic的值</li>
+</ul>
+<p>5 . 数据交互（explore and interact)</p>
+<ul>
+<li>订阅Characteristic的通知</li>
+</ul>
+<p>6 . 断开链接</p>
+</blockquote>
+<p><img src="http://upload-images.jianshu.io/upload_images/1363078-25e83ea0dfd337ad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Central.png"></p>
+<p><strong>外设端（发送端）</strong></p>
+<blockquote>
+<ol>
+<li>创建Peripheral管理对象</li>
+<li>创建Service和Characteristic树</li>
+<li>发送广告</li>
+<li>处理读写请求和订阅</li>
+</ol>
+</blockquote>
+<p><img src="http://upload-images.jianshu.io/upload_images/1363078-4d8c5296219eb1d5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Peripheral.png"></p>
+<p><strong>蓝牙状态</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">typedef NS_ENUM(NSInteger, CBManagerState) &#123;</span><br><span class="line">    CBManagerStateUnknown = 0,</span><br><span class="line">    CBManagerStateResetting,  </span><br><span class="line">    CBManagerStateUnsupported, //不支持</span><br><span class="line">    CBManagerStateUnauthorized, //未授权</span><br><span class="line">    CBManagerStatePoweredOff, //关闭</span><br><span class="line">    CBManagerStatePoweredOn,  //蓝牙打开状态</span><br><span class="line">&#125; NS_ENUM_AVAILABLE(NA, 10_0);</span><br></pre></td></tr></table></figure>
+<p><strong>连接状态</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">/*!</span><br><span class="line"> *  @enum CBPeripheralState</span><br><span class="line"> *</span><br><span class="line"> *  @discussion Represents the current connection state of a CBPeripheral.</span><br><span class="line"> *</span><br><span class="line"> */</span><br><span class="line">typedef NS_ENUM(NSInteger, CBPeripheralState) &#123;</span><br><span class="line">    CBPeripheralStateDisconnected = 0,</span><br><span class="line">    CBPeripheralStateConnecting,</span><br><span class="line">    CBPeripheralStateConnected,</span><br><span class="line">    CBPeripheralStateDisconnecting NS_AVAILABLE(NA, 9_0),</span><br><span class="line">&#125; NS_AVAILABLE(NA, 7_0);</span><br></pre></td></tr></table></figure>
+<p><strong>CBCentralManagerDelegate</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">@required </span><br><span class="line"> // 更新CentralManager状态，参数central就是当前的Manager。</span><br><span class="line">- (void)centralManagerDidUpdateState:(CBCentralManager *)central;</span><br><span class="line"></span><br><span class="line">@optional</span><br><span class="line">// 蓝牙状态的保存和恢复，进入后台和重新启动有关</span><br><span class="line">- (void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary&lt;NSString *, id&gt; *)dict;</span><br><span class="line"></span><br><span class="line">//扫描外部设备 </span><br><span class="line">- (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary&lt;NSString *, id&gt; *)advertisementData RSSI:(NSNumber *)RSSI;</span><br><span class="line"></span><br><span class="line">//与外设完成连接</span><br><span class="line">- (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral;</span><br><span class="line"></span><br><span class="line">//连接失败</span><br><span class="line">- (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error;</span><br><span class="line"></span><br><span class="line">//断开连接</span><br><span class="line">- (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error;</span><br></pre></td></tr></table></figure>
+<p><strong>CBPeripheralDelegate</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">@optional</span><br><span class="line">//peripheral更新</span><br><span class="line">- (void)peripheralDidUpdateName:(CBPeripheral *)peripheral NS_AVAILABLE(NA, 6_0);</span><br><span class="line">//服务更新时触发</span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didModifyServices:(NSArray&lt;CBService *&gt; *)invalidatedServices NS_AVAILABLE(NA, 7_0);</span><br><span class="line">//更新RSSI，过时用下一代替</span><br><span class="line">- (void)peripheralDidUpdateRSSI:(CBPeripheral *)peripheral error:(nullable NSError *)error NS_DEPRECATED(NA, NA, 5_0, 8_0);</span><br><span class="line">// RSSI值</span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didReadRSSI:(NSNumber *)RSSI error:(nullable NSError *)error NS_AVAILABLE(NA, 8_0);</span><br><span class="line">//发现服务</span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(nullable NSError *)error;</span><br><span class="line">//发现嵌套服务</span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didDiscoverIncludedServicesForService:(CBService *)service error:(nullable NSError *)error;</span><br><span class="line">//发现服务中的Characteristic</span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(nullable NSError *)error;</span><br><span class="line">//更新Characteristic</span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error;</span><br><span class="line"></span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error;</span><br><span class="line"></span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error;</span><br><span class="line"></span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error;</span><br><span class="line"></span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForDescriptor:(CBDescriptor *)descriptor error:(nullable NSError *)error;</span><br><span class="line"></span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didWriteValueForDescriptor:(CBDescriptor *)descriptor error:(nullable NSError *)error;</span><br></pre></td></tr></table></figure>
+<p><strong>CBPeripheralManagerDelegate</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">@required</span><br><span class="line">//类似CBCentralManager</span><br><span class="line">- (void)peripheralManagerDidUpdateState:(CBPeripheralManager *)peripheral;</span><br><span class="line">@optional</span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral willRestoreState:(NSDictionary&lt;NSString *, id&gt; *)dict;</span><br><span class="line">//开始广播</span><br><span class="line">- (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheral error:(nullable NSError *)error;</span><br><span class="line">//添加服务</span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral didAddService:(CBService *)service error:(nullable NSError *)error;</span><br><span class="line">//订阅</span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didSubscribeToCharacteristic:(CBCharacteristic *)characteristic;</span><br><span class="line">//未订阅</span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didUnsubscribeFromCharacteristic:(CBCharacteristic *)characteristic;</span><br><span class="line">//接收读取请求</span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveReadRequest:(CBATTRequest *)request;</span><br><span class="line">//接收写入请求</span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveWriteRequests:(NSArray&lt;CBATTRequest *&gt; *)requests;</span><br><span class="line">//更新订阅</span><br><span class="line">- (void)peripheralManagerIsReadyToUpdateSubscribers:(CBPeripheralManager *)peripheral;</span><br></pre></td></tr></table></figure>
+<h1 id="中心端（接收端）"><a href="#中心端（接收端）" class="headerlink" title="中心端（接收端）"></a>中心端（接收端）</h1><p>从上面了解了蓝牙开发的基本流程和API结构，那下面我们一起看看中心端的开发步骤。</p>
+<h2 id="创建CentralManager"><a href="#创建CentralManager" class="headerlink" title="创建CentralManager"></a>创建CentralManager</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">//创建CentralManager</span><br><span class="line">- (void)startUpCentralManager &#123;</span><br><span class="line">    _centralManager = [[CBCentralManager alloc] initWithDelegate: self queue: nil];</span><br><span class="line">    _peripherals = [NSMutableArray array]; //用于存放扫描的外设</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>创建CentralManager会调用Delegate方法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">#pragma mark - CBCentralManagerDelegate</span><br><span class="line"></span><br><span class="line">// 实现： 确保支持BL和有效的Central设备</span><br><span class="line">- (void)centralManagerDidUpdateState:(CBCentralManager *)central &#123;</span><br><span class="line">    switch (central.state) &#123;</span><br><span class="line">        case CBManagerStatePoweredOn:</span><br><span class="line">            //只有此状态下才可以进行扫描设备</span><br><span class="line">           [self scan];</span><br><span class="line">            break;</span><br><span class="line">        case CBManagerStateUnknown:</span><br><span class="line">            break;</span><br><span class="line">        case CBManagerStateResetting:</span><br><span class="line">            break;</span><br><span class="line">        case CBManagerStateUnsupported:</span><br><span class="line">            break;</span><br><span class="line">        case CBManagerStateUnauthorized:</span><br><span class="line">            break;</span><br><span class="line">        case CBManagerStatePoweredOff:</span><br><span class="line">            break;</span><br><span class="line">        default:</span><br><span class="line">            break;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="扫描外部设备"><a href="#扫描外部设备" class="headerlink" title="扫描外部设备"></a>扫描外部设备</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">- (void)scan &#123;</span><br><span class="line">    [self.centralManager scanForPeripheralsWithServices: nil options: nil];</span><br><span class="line">    NSLog(@&quot;Scanning started&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>serviceUUIDs: 是一个CBUUID类型的数组，每个CBUUID代表一个service的UUID。使用这个参数可以限制扫描内容，如果设置为nil，则表示搜索全部外设。<br>options: 定义扫描 ，字典。</p>
+<ul>
+<li>CBCentralManagerScanOptionAllowDuplicatesKey : 布尔值，无重复过滤的扫描。默认是NO。如果设置为YES，对电池有不利影响。</li>
+<li>CBCentralManagerScanOptionSolicitedServiceUUIDsKey 想要扫描的Service UUIDs数组（NSArray）。</li>
+</ul>
+<p>另外，在<code>bluetooth-central</code>后台模式下，option将被忽略。这个问题后面会详细讲解。</p>
+</blockquote>
+<p>当启动扫描后，每次扫描到一个外设就会调用delegate方法：<code>centralManager: didDiscoverPeripheral: advertisementData: RSSI:</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">- (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary&lt;NSString *, id&gt; *)advertisementData RSSI:(NSNumber *)RSSI &#123;</span><br><span class="line">    NSLog(@&quot;%@&quot;, peripheral.name);</span><br><span class="line">    //查找到设备并持有它，否则不会保存</span><br><span class="line">    [self.peripherals addObject: peripheral];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<ul>
+<li>peripheral : 扫描到的设备</li>
+<li>advertisementData: 字典包含所有的广告数据</li>
+<li>RSSI：received signal strength indicator，单位分贝。表示信号强度。</li>
+</ul>
+</blockquote>
+<p>到这一步我们扫描到外部设备，那接下来就是建立连接了。</p>
+<h2 id="建立连接"><a href="#建立连接" class="headerlink" title="建立连接"></a>建立连接</h2><p>通过扫描，我们发现了目标外设，接下来建立连接。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- (void)startUpConnect &#123;</span><br><span class="line">    [self.centralManager connectPeripheral: self.peripheral options: nil];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>self.peripheral : 目标外设<br>options ：字典，用来定制连接行为</p>
+<ul>
+<li>CBConnectPeripheralOptionNotifyOnConnectionKey</li>
+<li>CBConnectPeripheralOptionNotifyOnDisconnectionKey</li>
+<li>CBConnectPeripheralOptionNotifyOnNotificationKey</li>
+</ul>
+</blockquote>
+<p>进行连接通常会出现两种情况：成功、失败。</p>
+<p><strong>连接成功</strong><br>本地连接成功，会调用方法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral &#123;</span><br><span class="line">    NSLog(@&quot;链接设备名称为：%@&quot;, peripheral.name);</span><br><span class="line">    // 设置代理</span><br><span class="line">    peripheral.delegate = self;</span><br><span class="line">    //发现服务</span><br><span class="line">    [peripheral discoverServices: nil];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>连接失败</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//链接失败</span><br><span class="line">- (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error &#123;</span><br><span class="line">    NSLog(@&quot;连接名称：%@ 失败，原因：%@&quot;, peripheral.name, error.localizedDescription);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>另外，既然可以建立连接，那么肯定可以断开连接。</p>
+<p><strong>断开连接</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//断开链接</span><br><span class="line">- (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error &#123;</span><br><span class="line">    NSLog(@&quot;与外设断开链接：%@， %@&quot;, peripheral.name, error.localizedDescription);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>如果断开连接不是由<code>cancelPeripheralConnection:</code>发起的，error会给出详细信息。需要注意的是，当断开连接，所有的services, characteristics和Characteristic descriptions都是无效的。</p>
+</blockquote>
+<h2 id="获取服务"><a href="#获取服务" class="headerlink" title="获取服务"></a>获取服务</h2><p>创建连接成功后，在delegate方法中</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// 设置代理</span><br><span class="line">peripheral.delegate = self;</span><br><span class="line">//发现服务</span><br><span class="line">[peripheral discoverServices: nil];</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>可以通过<code>CBUUID</code>指定的服务。</p>
+</blockquote>
+<p><strong>CBPeripheralDelegate</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error &#123;</span><br><span class="line">    if (error) &#123;</span><br><span class="line">        NSLog(@&quot;发现服务错误：%@&quot;, error.localizedDescription);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    // 一个外设会发送多个服务</span><br><span class="line">    for (CBService *service in peripheral.services) &#123;</span><br><span class="line">        //扫描每个service的Characteristic，通过Characteristic的UUID来指定查找那个Characteristic。</span><br><span class="line">        [peripheral discoverCharacteristics: nil forService: service];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>注：一个外设包含多个Service，可以通过Service的UUID来区分。一个Service包含多个Characteristic，通过Characteristic的UUID来区分。</p>
+</blockquote>
+<h2 id="获取特征"><a href="#获取特征" class="headerlink" title="获取特征"></a>获取特征</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error &#123;</span><br><span class="line">    if (error) &#123;</span><br><span class="line">        NSLog(@&quot;发现特征错误：%@&quot;, error.localizedDescription);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    for (CBCharacteristic *characteristic in service.characteristics) &#123;</span><br><span class="line">        //直接读取Characteristic值，此时调用peripheral: didUpdateValueForCharacteristic: error:</span><br><span class="line">        [peripheral readValueForCharacteristic: characteristic];</span><br><span class="line">        //另一种情况，订阅特征。此时调用 peripheral: didUpdateNotificationStateForCharacteristic: error:</span><br><span class="line">        [peripheral setNotifyValue:YES forCharacteristic: characteristic];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="订阅Characteristic"><a href="#订阅Characteristic" class="headerlink" title="订阅Characteristic"></a>订阅Characteristic</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">//给指定的特征设置通知</span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error &#123;</span><br><span class="line"></span><br><span class="line">    if (error) &#123;</span><br><span class="line">        NSLog(@&quot;Error changing notification state : %@&quot;, error.localizedDescription);</span><br><span class="line">    &#125;</span><br><span class="line">    if (![characteristic.UUID isEqual:[CBUUID UUIDWithString:@&quot;&quot;]]) &#123;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (characteristic.isNotifying) &#123;</span><br><span class="line">        NSLog(@&quot;Notification began on :%@&quot;, characteristic);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        NSLog(@&quot;Notification stoped on : %@ Disconnecting&quot;, characteristic);</span><br><span class="line">        [self.centralManager cancelPeripheralConnection: peripheral];</span><br><span class="line">    &#125;   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="获取特征值"><a href="#获取特征值" class="headerlink" title="获取特征值"></a>获取特征值</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//readValueCharacteristic时调用</span><br><span class="line">- (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error &#123;</span><br><span class="line"></span><br><span class="line">    //打印出characteristic的UUID和值</span><br><span class="line">    //!注意，value的类型是NSData，具体开发时，会根据外设协议制定的方式去解析数据</span><br><span class="line">    NSLog(@&quot;特性ID：:%@  值:%@&quot;,characteristic.UUID, characteristic.value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="数据交互"><a href="#数据交互" class="headerlink" title="数据交互"></a>数据交互</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">- (void)writeValue &#123;</span><br><span class="line">    NSData *data = [@&quot;Test&quot; dataUsingEncoding:NSUTF8StringEncoding];</span><br><span class="line">    [self.peripheral writeValue: data forCharacteristic: self.characteristic type: CBCharacteristicWriteWithResponse];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>发送数据</p>
+<ul>
+<li><p>value： 写入值</p>
+</li>
+<li><p>characteristic : 被写入的特征</p>
+</li>
+<li><p>type: 写入类型，是否有应答</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt;   typedef NS_ENUM(NSInteger, CBCharacteristicWriteType) &#123;</span><br><span class="line">&gt;   CBCharacteristicWriteWithResponse = 0,</span><br><span class="line">&gt;   CBCharacteristicWriteWithoutResponse,</span><br><span class="line">&gt;   &#125;;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>当type为CBCharacteristicWriteWithResponse时，调用delegate方法：<code>peripheral: didWriteValueForCharacteristic: error:</code>。</p>
+</blockquote>
+<h1 id="外设端（发送端）"><a href="#外设端（发送端）" class="headerlink" title="外设端（发送端）"></a>外设端（发送端）</h1><h2 id="创建PeripheralManager"><a href="#创建PeripheralManager" class="headerlink" title="创建PeripheralManager"></a>创建PeripheralManager</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">//创建PeripheralManager</span><br><span class="line">- (void)startUpPeripheralManager &#123;</span><br><span class="line">    _peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue: nil];</span><br><span class="line">&#125;</span><br><span class="line">//唯一@required方法</span><br><span class="line">- (void)peripheralManagerDidUpdateState:(CBPeripheralManager *)peripheral &#123;</span><br><span class="line">    switch (peripheral.state) &#123;</span><br><span class="line">        case CBManagerStatePoweredOn:</span><br><span class="line">            // 创建服务和特征</span><br><span class="line">            [self buildService];</span><br><span class="line">            break;</span><br><span class="line">        case CBManagerStateUnknown :</span><br><span class="line">            break;</span><br><span class="line">        case CBManagerStateResetting:</span><br><span class="line">            break;</span><br><span class="line">        case CBManagerStateUnsupported:</span><br><span class="line">            break;</span><br><span class="line">        case CBManagerStateUnauthorized:</span><br><span class="line">            break;</span><br><span class="line">        case CBManagerStatePoweredOff:</span><br><span class="line">            break;</span><br><span class="line">        default:</span><br><span class="line">            break;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="创建服务和特征"><a href="#创建服务和特征" class="headerlink" title="创建服务和特征"></a>创建服务和特征</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">- (void)buildService &#123;</span><br><span class="line">    //创建Characteristic</span><br><span class="line">    self.transferCharacteristic = [[CBMutableCharacteristic alloc] initWithType:[CBUUID UUIDWithString:TRANSFER_CHARACTERISTIC_UUID] properties:CBCharacteristicPropertyNotify value: nil permissions:CBAttributePermissionsReadable];</span><br><span class="line"></span><br><span class="line">    //创建服务</span><br><span class="line">    CBMutableService *transferService = [[CBMutableService alloc] initWithType:[CBUUID UUIDWithString:TRANSFER_SERVICE_UUID] primary:YES];</span><br><span class="line">    //将特征添加到服务中</span><br><span class="line">    transferService.characteristics = @[self.transferCharacteristic];</span><br><span class="line"></span><br><span class="line">    //将服务添加到PeripheralManager中，调用delegate方法： peripheralManager: didAddService: error:</span><br><span class="line">    [self.peripheralManager addService: transferService];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="创建Characteristic"><a href="#创建Characteristic" class="headerlink" title="创建Characteristic"></a>创建Characteristic</h3><blockquote>
+<p>创建Characteristic</p>
+<ul>
+<li>UUID : 唯一标识</li>
+<li>properties：属性</li>
+<li>value : 设置nil， 动态设置。</li>
+<li>permission : 权限</li>
+</ul>
+</blockquote>
+<p><strong>属性</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">typedef NS_OPTIONS(NSUInteger, CBCharacteristicProperties) &#123;</span><br><span class="line">    //特征值可以使用特征描述广播</span><br><span class="line">    CBCharacteristicPropertyBroadcast                                               = 0x01,</span><br><span class="line">    //特征值可以被读取，通过readValueForCharacteristic: 来读取</span><br><span class="line">    CBCharacteristicPropertyRead                                                    = 0x02,</span><br><span class="line">    // 可以被读写，通过writeValue: forCharacteristic: type: 写入特征值，无应答标识写入成功。</span><br><span class="line">    CBCharacteristicPropertyWriteWithoutResponse                                    = 0x04,</span><br><span class="line">    // 可以被写入，有应答标识写入成功</span><br><span class="line">    CBCharacteristicPropertyWrite                                                   = 0x08,</span><br><span class="line">    //允许通知特征值，无应答表示接收</span><br><span class="line">    CBCharacteristicPropertyNotify                                                  = 0x10,</span><br><span class="line">    //允许通知特征值，有应答表示接收</span><br><span class="line">    CBCharacteristicPropertyIndicate                                                = 0x20,</span><br><span class="line">    CBCharacteristicPropertyAuthenticatedSignedWrites                               = 0x40,</span><br><span class="line">    CBCharacteristicPropertyExtendedProperties                                      = 0x80,</span><br><span class="line">    //只有信任的设备接收特征值通知</span><br><span class="line">    CBCharacteristicPropertyNotifyEncryptionRequired NS_ENUM_AVAILABLE(NA, 6_0)     = 0x100,</span><br><span class="line">    CBCharacteristicPropertyIndicateEncryptionRequired NS_ENUM_AVAILABLE(NA, 6_0)   = 0x200</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>属性特征，可以组合使用。</p>
+</blockquote>
+<p><strong>权限</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">typedef NS_OPTIONS(NSUInteger, CBAttributePermissions) &#123;</span><br><span class="line">    // 可读</span><br><span class="line">    CBAttributePermissionsReadable                  = 0x01,</span><br><span class="line">    // 可写</span><br><span class="line">    CBAttributePermissionsWriteable                 = 0x02,</span><br><span class="line">    // 信任可读</span><br><span class="line">    CBAttributePermissionsReadEncryptionRequired    = 0x04,</span><br><span class="line">    // 信任可写</span><br><span class="line">    CBAttributePermissionsWriteEncryptionRequired   = 0x08</span><br><span class="line">&#125; NS_ENUM_AVAILABLE(NA, 6_0);</span><br></pre></td></tr></table></figure>
+<h3 id="创建Service"><a href="#创建Service" class="headerlink" title="创建Service"></a>创建Service</h3><blockquote>
+<p>UUID : 唯一标识<br>isPrimary：YES：主服务；NO：次服务</p>
+<p>添加特征到characteristics数据<br>调用delegate方法： peripheralManager: didAddService: error:</p>
+</blockquote>
+<h2 id="发送广告"><a href="#发送广告" class="headerlink" title="发送广告"></a>发送广告</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">//开始广告</span><br><span class="line">- (void)startAdvertise &#123;</span><br><span class="line">    [self.peripheralManager startAdvertising:@&#123;CBAdvertisementDataServiceUUIDsKey : @[[CBUUID UUIDWithString:TRANSFER_SERVICE_UUID]]&#125;];</span><br><span class="line">&#125;</span><br><span class="line">//停止广告</span><br><span class="line">- (void)stopAdvertise &#123;</span><br><span class="line">    [self.peripheralManager stopAdvertising];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>开始广告<br>advertisementData: 可选字典，包含想要广告的数据。两种类型：</p>
+<ul>
+<li>CBAdvertisementDataLocalNameKey ：对应名称</li>
+<li>CBAdvertisementDataServiceUUIDsKey : 对应UUID</li>
+</ul>
+<p>调用delegate方法：peripheralManagerDidStartAdvertising: error:</p>
+</blockquote>
+<h2 id="处理订阅"><a href="#处理订阅" class="headerlink" title="处理订阅"></a>处理订阅</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didSubscribeToCharacteristic:(CBCharacteristic *)characteristic &#123;</span><br><span class="line">    NSLog(@&quot;当前Characteristic被订阅&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>当characteristic配置为notify或indicate，将唤起次方法。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didUnsubscribeFromCharacteristic:(CBCharacteristic *)characteristic &#123;</span><br><span class="line">    NSLog(@&quot;Central unsubscribed from characteristic&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>当central移除特征的notification/indications时调用，取消订阅回调。</p>
+</blockquote>
+<h2 id="数据交互-1"><a href="#数据交互-1" class="headerlink" title="数据交互"></a>数据交互</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveReadRequest:(CBATTRequest *)request &#123;</span><br><span class="line">  &#125;</span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveWriteRequests:(NSArray&lt;CBATTRequest *&gt; *)requests &#123; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>当接收到中心端的读写请求式，会触发这个方法。<br>在该方法被调用时，可以在方法内通过PeripheralManager调用：<code>respondToRequest: withResult:</code>来响应中心端的读写请求。</p>
+</blockquote>
+<h1 id="蓝牙的后台模式"><a href="#蓝牙的后台模式" class="headerlink" title="蓝牙的后台模式"></a>蓝牙的后台模式</h1><h2 id="执行模式"><a href="#执行模式" class="headerlink" title="执行模式"></a>执行模式</h2><blockquote>
+<p>plist文件中，设置UIBackgroundModes：</p>
+<ul>
+<li>bluetooth-central</li>
+<li>bluetooth-peripheral</li>
+</ul>
+</blockquote>
+<h2 id="bluetooth-central-执行模式"><a href="#bluetooth-central-执行模式" class="headerlink" title="bluetooth-central 执行模式"></a>bluetooth-central 执行模式</h2><p>当设置为此模式，允许APP切入后台后还能进行蓝牙服务。依然能进行扫描，连接，交互数据等。<br>进入后台<code>CBCentralManagerScanOptionAllowDuplicatesKey</code>扫描被忽略。</p>
+<h2 id="bluetooth-peripheral-执行模式"><a href="#bluetooth-peripheral-执行模式" class="headerlink" title="bluetooth-peripheral 执行模式"></a>bluetooth-peripheral 执行模式</h2><p>当设置为此模式，允许APP进行读写，连接中心端等。<br><code>CBAdvertisementDataLocalNameKey</code>被忽略，本地外设名不在广播。</p>
+<h1 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h1><p>PeripheralManager</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br></pre></td><td class="code"><pre><span class="line">#import &quot;LQPeripheralManager.h&quot;</span><br><span class="line">#import &lt;CoreBluetooth/CoreBluetooth.h&gt;</span><br><span class="line">static NSString *const ServiceUUID1 = @&quot;FFF0&quot;;</span><br><span class="line">static NSString *const notifyCharacteristicUUID = @&quot;FFF1&quot;;</span><br><span class="line">static NSString *const readwriteCharacteristicUUID = @&quot;FFF2&quot;;</span><br><span class="line"></span><br><span class="line">static NSString *const ServiceUUID2 = @&quot;FFE0&quot;;</span><br><span class="line">static NSString *const readCharacteristicUUID = @&quot;FFE1&quot;;</span><br><span class="line"></span><br><span class="line">static NSString *const LocalNameKey = @&quot;Owenli&quot;;</span><br><span class="line"></span><br><span class="line">@interface LQPeripheralManager ()&lt;CBPeripheralManagerDelegate&gt;</span><br><span class="line">@property (nonatomic, strong) CBPeripheralManager *peripheralManager;</span><br><span class="line">@property (nonatomic, strong) NSTimer *timer;</span><br><span class="line">@property (nonatomic, assign) NSInteger index;</span><br><span class="line">@end</span><br><span class="line"></span><br><span class="line">@implementation LQPeripheralManager</span><br><span class="line"></span><br><span class="line">+ (instancetype)shareInstance &#123;</span><br><span class="line">    static LQPeripheralManager *peripheral;</span><br><span class="line">    static dispatch_once_t onceToken;</span><br><span class="line">    dispatch_once(&amp;onceToken, ^&#123;</span><br><span class="line">        peripheral = [[self alloc] init];</span><br><span class="line">    &#125;);</span><br><span class="line">    return peripheral;</span><br><span class="line">&#125;</span><br><span class="line">- (instancetype)init &#123;</span><br><span class="line">    if (self = [super init]) &#123;</span><br><span class="line">        _peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:nil];</span><br><span class="line">        _index = 0;</span><br><span class="line">    &#125;</span><br><span class="line">    return self;</span><br><span class="line">&#125;</span><br><span class="line">/**</span><br><span class="line"> * @Description 初始化化UUID和服务信息</span><br><span class="line"> */</span><br><span class="line">- (void)setup &#123;</span><br><span class="line"></span><br><span class="line">    //characteristic字段描述</span><br><span class="line">    CBUUID *cbuuidCharacteristicUserDescriptionStringUUID = [CBUUID UUIDWithString:CBUUIDCharacteristicUserDescriptionString];</span><br><span class="line">    /*</span><br><span class="line">     可以通知的Characteristic</span><br><span class="line">     properities : CBCharacteristicPropertyNotify</span><br><span class="line">     permissions : CBAttributePermissionsReadable</span><br><span class="line">     */</span><br><span class="line">    CBMutableCharacteristic *notifyCharacteristic  = [[CBMutableCharacteristic alloc] initWithType:[CBUUID UUIDWithString:notifyCharacteristicUUID] properties:CBCharacteristicPropertyNotify value:nil permissions:CBAttributePermissionsReadable];</span><br><span class="line"></span><br><span class="line">    /*</span><br><span class="line">     可读写的characteristic</span><br><span class="line">     prperitise: CBCharacteristicPropertyWrite | CBCharacteristicPropertyRead</span><br><span class="line">     permisssions : CBAttributePermissionsReadable | CBAttributePermisssionWriteable</span><br><span class="line">     */</span><br><span class="line"></span><br><span class="line">    CBMutableCharacteristic * readwriteCharacteristic = [[CBMutableCharacteristic alloc] initWithType:[CBUUID UUIDWithString:readwriteCharacteristicUUID] properties:CBCharacteristicPropertyWrite | CBCharacteristicPropertyRead value:nil permissions:CBAttributePermissionsReadable | CBAttributePermissionsWriteable];</span><br><span class="line">    // 设置descriptor</span><br><span class="line">    CBMutableDescriptor *readwriteCharacteristicDescription1 = [[CBMutableDescriptor alloc] initWithType:cbuuidCharacteristicUserDescriptionStringUUID value:@&quot;name&quot;];</span><br><span class="line"></span><br><span class="line">    [readwriteCharacteristic setDescriptors:@[readwriteCharacteristicDescription1]];</span><br><span class="line">    /*</span><br><span class="line">     只读Characteristic</span><br><span class="line">     properties: CBCharacteristicPropertyRead</span><br><span class="line">     permisssions: CBAttributePermissionsReadable</span><br><span class="line">     */</span><br><span class="line">    CBMutableCharacteristic *readCharacteristic  = [[CBMutableCharacteristic alloc] initWithType:[CBUUID UUIDWithString:readCharacteristicUUID] properties:CBCharacteristicPropertyRead value:nil permissions:CBAttributePermissionsReadable];</span><br><span class="line">    // 第一个Service</span><br><span class="line">    CBMutableService *service1  = [[CBMutableService alloc] initWithType:[CBUUID UUIDWithString:ServiceUUID1] primary:YES];</span><br><span class="line"></span><br><span class="line">    [service1 setCharacteristics:@[notifyCharacteristic, readwriteCharacteristic]];</span><br><span class="line"></span><br><span class="line">    //第二个Service</span><br><span class="line"></span><br><span class="line">    CBMutableService *service2 = [[CBMutableService alloc] initWithType:[CBUUID UUIDWithString:ServiceUUID2] primary:YES];</span><br><span class="line">    [service2 setCharacteristics:@[readCharacteristic]];</span><br><span class="line">    //添加到periperal此时会调用，peripheralManager: didAddService: error:</span><br><span class="line">    [self.peripheralManager addService:service2];</span><br><span class="line">    [self.peripheralManager addService:service1];</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">#pragma mark - PeripherManagerDelegate</span><br><span class="line"></span><br><span class="line">//检测蓝牙状态，</span><br><span class="line">- (void)peripheralManagerDidUpdateState:(CBPeripheralManager *)peripheral &#123;</span><br><span class="line">    switch (peripheral.state) &#123;</span><br><span class="line">        case CBManagerStatePoweredOn:</span><br><span class="line">            //初始化</span><br><span class="line">            [self setup];</span><br><span class="line">            break;</span><br><span class="line">        case CBManagerStatePoweredOff:</span><br><span class="line">            NSLog(@&quot;powered off&quot;);</span><br><span class="line">            break;</span><br><span class="line">        default:</span><br><span class="line">            break;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral didAddService:(CBService *)service error:(NSError *)error &#123;</span><br><span class="line">    if (error) &#123;</span><br><span class="line">        NSLog(@&quot;%@&quot;, error.localizedDescription);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    //添加服务后，开始广播</span><br><span class="line">    //自动回调： peripheralManagerDidStartAdvertising: error:</span><br><span class="line">    [self.peripheralManager startAdvertising:@&#123;</span><br><span class="line">                                               CBAdvertisementDataServiceUUIDsKey : @[[CBUUID UUIDWithString:ServiceUUID1], [CBUUID UUIDWithString:ServiceUUID2]],</span><br><span class="line">                                               CBAdvertisementDataLocalNameKey : LocalNameKey</span><br><span class="line">                                               &#125;];</span><br><span class="line">&#125;</span><br><span class="line">//通知发送广播</span><br><span class="line">- (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheral error:(NSError *)error &#123;</span><br><span class="line">    if (error) &#123;</span><br><span class="line">        NSLog(@&quot;%@&quot;, error.localizedDescription);</span><br><span class="line">    &#125;</span><br><span class="line">    NSLog(@&quot;start advert&quot;);</span><br><span class="line">&#125;</span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didSubscribeToCharacteristic:(CBCharacteristic *)characteristic &#123;</span><br><span class="line">    NSLog(@&quot;subscribe data of : %@&quot;, characteristic.UUID);</span><br><span class="line">    //分配定时任务</span><br><span class="line">    self.timer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(sendData:) userInfo:characteristic repeats:YES];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didUnsubscribeFromCharacteristic:(CBCharacteristic *)characteristic &#123;</span><br><span class="line">    NSLog(@&quot;unsubscrible: %@&quot;, characteristic.UUID);</span><br><span class="line">    [self.timer invalidate];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (void)sendData:(NSTimer *)timer &#123;</span><br><span class="line"></span><br><span class="line">    CBMutableCharacteristic *characteristic = timer.userInfo;</span><br><span class="line">    if ([self.peripheralManager updateValue:[[NSString stringWithFormat:@&quot;send data : %ld&quot;, _index] dataUsingEncoding: NSUTF8StringEncoding] forCharacteristic:characteristic onSubscribedCentrals:nil]) &#123;</span><br><span class="line">        NSLog(@&quot;发送成功&quot;);</span><br><span class="line">        _index ++;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        NSLog(@&quot;发送数据错误&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">//中心设备读取请求</span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveReadRequest:(CBATTRequest *)request &#123;</span><br><span class="line">    NSLog(@&quot;readRequest&quot;);</span><br><span class="line">    if (request.characteristic.properties &amp; CBCharacteristicPropertyRead) &#123;</span><br><span class="line">        NSData *data = [[NSString stringWithFormat:@&quot;by characteristic request&quot;] dataUsingEncoding:NSUTF8StringEncoding];</span><br><span class="line">        [request setValue:data];</span><br><span class="line">        //对请求作出成功响应</span><br><span class="line">        [self.peripheralManager respondToRequest:request withResult:CBATTErrorSuccess];</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        [self.peripheralManager respondToRequest:request withResult:CBATTErrorWriteNotPermitted];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//写入请求</span><br><span class="line">- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveWriteRequests:(NSArray&lt;CBATTRequest *&gt; *)requests &#123;</span><br><span class="line"></span><br><span class="line">    NSLog(@&quot;writeRequest&quot;);</span><br><span class="line"></span><br><span class="line">    CBATTRequest *request = requests.firstObject;</span><br><span class="line"></span><br><span class="line">    if (request.characteristic.properties &amp; CBCharacteristicPropertyWrite) &#123;</span><br><span class="line">        CBMutableCharacteristic *charateristic  = (CBMutableCharacteristic *)request.characteristic;</span><br><span class="line">        charateristic.value = request.value;</span><br><span class="line">        NSLog(@&quot;receive data ：%@&quot;, [[NSString alloc] initWithData:charateristic.value encoding:NSUTF8StringEncoding]);</span><br><span class="line">        [self.peripheralManager respondToRequest:request withResult:CBATTErrorSuccess];</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        [self.peripheralManager respondToRequest:request withResult:CBATTErrorWriteNotPermitted];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">- (void)peripheralManagerIsReadyToUpdateSubscribers:(CBPeripheralManager *)peripheral &#123;</span><br><span class="line">    NSLog(@&quot;peripheralManagerIsReadyToUpdateSubscribers&quot;);</span><br><span class="line">&#125;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>使用LighBlue测试外设端</p>
+</blockquote>
+<h1 id="备注"><a href="#备注" class="headerlink" title="备注"></a>备注</h1><p>命令行生成<code>UUID</code>方法：<code>uuidgen</code>。<br>Mac测试软件：<a href="https://itunes.apple.com/us/app/lightblue/id639944780?mt=12" target="_blank" rel="noopener">LighBlue</a>，可以用来测试iOS端外设。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a href="https://developer.apple.com/library/content/documentation/NetworkingInternetWeb/Conceptual/CoreBluetooth_concepts/AboutCoreBluetooth/Introduction.html#//apple_ref/doc/uid/TP40013257-CH1-SW1" target="_blank" rel="noopener">Core Bluetooth Programming Guide</a></li>
+<li><a href="https://developer.apple.com/bluetooth/" target="_blank" rel="noopener">Bluetooth for Developers</a></li>
+<li><a href="https://larrycal.coding.me/Larrycal/2016/12/03/IOS%E8%93%9D%E7%89%99%E9%80%9A%E8%AE%AF%E8%AF%A6%E8%A7%A3/" target="_blank" rel="noopener">IOS蓝牙通讯详解</a></li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/11/06/iOS开发，Bluetooth/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-适配iPhone XR:iPhone XS Max" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="适配iPhone-XR-iPhone-XS-Max"><a href="#适配iPhone-XR-iPhone-XS-Max" class="headerlink" title="适配iPhone XR/iPhone XS Max"></a>适配iPhone XR/iPhone XS Max</h1><p>快速适配先说结论，找设计师要2张启动图：<br>iPhone XR：828px x 1792px<br>iPhone XS Max: 1242px x 2688px</p>
+<p>代码中使用了屏幕size判断是否是iPhone X的需要修改，请翻到最后。</p>
+<h3 id="2018年10月22日更新，整理最新的资料"><a href="#2018年10月22日更新，整理最新的资料" class="headerlink" title="2018年10月22日更新，整理最新的资料"></a>2018年10月22日更新，整理最新的资料</h3><p><a href="https://link.juejin.im/?target=https%3A%2F%2Fwww.paintcodeapp.com%2Fnews%2Fultimate-guide-to-iphone-resolutions" target="_blank" rel="noopener"><strong>iPhone所有设备的尺寸和分辨率</strong></a></p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/10/22/16699a5d9abd8c04?imageslim" alt="img"></p>
+<h3 id="LaunchImage中只有iPhone-X-iPhone-XS"><a href="#LaunchImage中只有iPhone-X-iPhone-XS" class="headerlink" title="LaunchImage中只有iPhone X/iPhone XS"></a>LaunchImage中只有iPhone X/iPhone XS</h3><p><strong>XCode GM Bug？</strong></p>
+<p>项目中使用LaunchImage来做启动图，那么有可能在XCode GM的LaunchImage中会出现只有iPhone X/iPhone XS启动图，并且<code>iOS 8.0 and Later</code> 没有被选中，并且没有iPhone XR/iPhone XS Max，需要手动选择一下<code>iOS 8.0 and Later</code>，才会出现iPhone XR/iPhone XS Max启动图。 这可能是XCode GM中的一个Bug。</p>
+<p>XCode9 LaunchImage</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/9/13/165d2bbc4d74933f?imageslim" alt="img"></p>
+<p>XCode10 GM LaunchImage <code>iOS 8.0 and Later</code> 没有被选中</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/9/13/165d2bc03b085923?imageslim" alt="img"></p>
+<p>XCode10 GM LaunchImage <code>iOS 8.0 and Later</code> 手动选中才出现 iPhone XR/iPhone XS Max</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/9/13/165d2bc4ccb4df4e?imageslim" alt="img"></p>
+<h3 id="iPhone-XR-XS-Max-对老版本兼容请求"><a href="#iPhone-XR-XS-Max-对老版本兼容请求" class="headerlink" title="iPhone XR / XS Max 对老版本兼容请求"></a>iPhone XR / XS Max 对老版本兼容请求</h3><p>如果没有设置iPhone XR/iPhone XS Max启动图但设置了iPhone X的启动图，iPhone XR / XS Max默认会走iPhone X 的尺寸<strong>375ptx812pt</strong>，会对内容近乎于等比拉伸放到iPhone XR / XS Max屏幕内，如下图：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/9/13/165d2bc92b656669?imageslim" alt="img"></p>
+<blockquote>
+<p>这里为什么说是近乎于等比拉伸： iPhone X 高宽比：812/375 = 2.16533333 iPhone XR 和 iPhone XS Max 高宽比：896/414 = 2.16425121</p>
+</blockquote>
+<h3 id="iPhone-XR-XS-Max-屏幕尺寸"><a href="#iPhone-XR-XS-Max-屏幕尺寸" class="headerlink" title="iPhone XR / XS Max 屏幕尺寸"></a>iPhone XR / XS Max 屏幕尺寸</h3><p><img src="https://user-gold-cdn.xitu.io/2018/9/13/165d2bce054bac5d?imageslim" alt="img"></p>
+<table>
+<thead>
+<tr>
+<th>型号</th>
+<th>逻辑尺寸</th>
+<th>系数</th>
+<th>分辨率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iPhone XR</td>
+<td>414pt x 896pt</td>
+<td>@2</td>
+<td>828px x 1792px</td>
+</tr>
+<tr>
+<td>iPhone XS Max</td>
+<td>414pt x 896pt</td>
+<td>@3</td>
+<td>1242px x 2688px</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>当时看发布会觉得XR 828px的分辨率有点奇怪，现在看来并不是苹果不想做720或1080，而是有照顾开发工程师的目的。 XR 和 XS Max 在逻辑大小上非常统一2x，3x就够了，也不用做其他的切图。</p>
+</blockquote>
+<p><strong>所以现在只是需要设计师给2张效果图：iPhone XR：828px x 1792pxiPhone XS Max: 1242px x 2688px</strong></p>
+<h3 id="Tips"><a href="#Tips" class="headerlink" title="Tips"></a>Tips</h3><h4 id="1-代码中判断是否是iPhone-X时需要注意"><a href="#1-代码中判断是否是iPhone-X时需要注意" class="headerlink" title="1. 代码中判断是否是iPhone X时需要注意"></a>1. 代码中判断是否是iPhone X时需要注意</h4><p>如果你以前是使用设备尺寸来判断iPhone X那就需要修改了，判断iPhone X主要是因为刘海的原因可能要做些特殊处理。鉴于iPhone X/XS/XR/XS Max底部都会有安全距离，所以可以利用<code>safeAreaInsets.bottom &gt; 0.0</code>来判断是否是iPhone X/XS/XR/XS Max。</p>
+<blockquote>
+<p>safeAreaInsets支持iOS11及以后。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">static inline BOOL isIPhoneXSeries() &#123;</span><br><span class="line">    BOOL iPhoneXSeries = NO;</span><br><span class="line">    if (UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPhone) &#123;</span><br><span class="line">        return iPhoneXSeries;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    if (@available(iOS 11.0, *)) &#123;</span><br><span class="line">        UIWindow *mainWindow = [[[UIApplication sharedApplication] delegate] window];</span><br><span class="line">        if (mainWindow.safeAreaInsets.bottom &gt; 0.0) &#123;</span><br><span class="line">            iPhoneXSeries = YES;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    return iPhoneXSeries;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/10/25/适配iPhone XR:iPhone XS Max/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-揭秘 iOS 布局" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在你刚开始开发 iOS 应用时，最难避免或者是调试的就是和布局相关的问题。通常这种问题发生的原因就是对于 view 何时真正更新的错误理解。想理解 view 在何时是如何更新的，需要对 iOS RunLoop 和相关的 <code>UIView</code> 方法有深刻的理解。这篇文章会介绍这些关联，希望能帮你澄清如何用 <code>UIView</code> 的方法来获得正确的行为。</p>
+<h2 id="一个-iOS-应用的主-RunLoop"><a href="#一个-iOS-应用的主-RunLoop" class="headerlink" title="一个 iOS 应用的主 RunLoop"></a>一个 iOS 应用的主 RunLoop</h2><p>一个 iOS 应用的主 RunLoop 负责处理所有的用户输入事件并触发相应的响应。所有的用户交互都会被加入到一个事件队列中。下图中的 <code>Application</code> object 会从队列中取出事件并将它们分发到应用中的其他对象上。本质上它会解释这些来自用户的输入事件，然后调用在应用中的 Core objects 相应的处理代码，而这些代码再调用开发者写的代码。当这些方法调用返回后，控制流回到主 RunLoop 上，然后开始 <em>update cycle（更新周期）</em>。Update cycle 负责布局并且重新渲染视图们（接下来会讲到）。下面的图片展示了应用是如何和设备交互并且处理用户输入的。</p>
+<p><img src="https://nos.netease.com/cloud-website-bucket/2018091913500737f469c3-1b62-4c97-bdb6-132deae5fcb6.jpg" alt="img"></p>
+<p><em><a href="https://developer.apple.com/library/content/documentation/General/Conceptual/Devpedia-CocoaApp/MainEventLoop.html" target="_blank" rel="noopener">https://developer.apple.com/library/content/documentation/General/Conceptual/Devpedia-CocoaApp/MainEventLoop.html</a></em></p>
+<h2 id="Update-Cycle"><a href="#Update-Cycle" class="headerlink" title="Update Cycle"></a>Update Cycle</h2><p>Update cycle 是当应用完成了你的所有事件处理代码后控制流回到主 RunLoop 时的那个时间点。正是在这个时间点上系统开始更新布局、显示和设置约束。如果你在处理事件的代码中请求修改了一个 view，那么系统就会把这个 view 标记为需要重画（redraw）。在接下来的 Update cycle 中，系统就会执行这些 view 上的更改。用户交互和布局更新间的延迟几乎不会被用户察觉到。iOS 应用一般以 60 fps 的速度展示动画，就是说每个更新周期只需要 1/60 秒。这个更新的过程很快，所以用户在和应用交互时感觉不到 UI 中的更新延迟。但是由于在处理事件和对应 view 重画间存在着一个间隔，RunLoop 中的某时刻的 view 更新可能不是你想要的那样。如果你的代码中的某些计算依赖于当下的 view 内容或者是布局，那么就有在过时 view 信息上操作的风险。理解 RunLoop、update cycle 和 <code>UIView</code> 中具体的方法可以帮助避免或者可以调试这类问题。下面的图展示出了 update cycle 发生在 RunLoop 的尾部。</p>
+<p><img src="https://nos.netease.com/cloud-website-bucket/201809191350304d3569a5-6554-4e50-b076-ba025a462829.png" alt="img"></p>
+<p>## </p>
+<h2 id="布局"><a href="#布局" class="headerlink" title="布局"></a>布局</h2><p>一个视图的布局指的是它在屏幕上的的大小和位置。每个 view 都有一个 frame 属性，用来表示在父 view 坐标系中的位置和具体的大小。<code>UIView</code> 给你提供了用来通知系统某个 view 布局发生变化的方法，也提供了在 view 布局重新计算后调用的可重写的方法。</p>
+<p><strong>layoutSubviews()</strong></p>
+<p>这个 <code>UIView</code> 方法处理对视图（view）及其所有子视图（subview）的重新定位和大小调整。它负责给出当前 view 和每个子 view 的位置和大小。这个方法很开销很大，因为它会在每个子视图上起作用并且调用它们相应的 <code>layoutSubviews</code> 方法。系统会在任何它需要重新计算视图的 frame 的时候调用这个方法，所以你应该在需要更新 frame 来重新定位或更改大小时重载它。然而你不应该在代码中显式调用这个方法。相反，有许多可以在 run loop 的不同时间点触发 <code>layoutSubviews</code> 调用的机制，这些触发机制比直接调用 <code>layoutSubviews</code> 的资源消耗要小得多。</p>
+<p>当 <code>layoutSubviews</code> 完成后，在 view 的所有者 view controller 上，会触发 <code>viewDidLayoutSubviews</code> 调用。因为 <code>viewDidLayoutSubviews</code> 是 view 布局更新后会被唯一可靠调用的方法，所以你应该把所有依赖于布局或者大小的代码放在 <code>viewDidLayoutSubviews</code> 中，而不是放在 <code>viewDidLoad</code> 或者 <code>viewDidAppear</code> 中。这是避免使用过时的布局或者位置变量的唯一方法。</p>
+<p><strong>自动刷新触发器</strong></p>
+<p>有许多事件会自动给视图打上 “update layout” 标记，因此 <code>layoutSubviews</code> 会在下一个周期中被调用，而不需要开发者手动操作。这些自动通知系统 view 的布局发生变化的方式有：</p>
+<ul>
+<li><p>修改 view 的大小</p>
+</li>
+<li><p>新增 subview</p>
+</li>
+<li><p>用户在 <code>UIScrollView</code> 上滚动（<code>layoutSubviews</code> 会在 <code>UIScrollView</code> 和它的父 view 上被调用）</p>
+</li>
+<li><p>用户旋转设备</p>
+</li>
+<li><p>更新视图的 constraints</p>
+</li>
+<li><p>​</p>
+</li>
+</ul>
+<p>这些方式都会告知系统 view 的位置需要被重新计算，继而会自动转化为一个最终的 <code>layoutSubviews</code> 调用。当然，也有直接触发 <code>layoutSubviews</code> 的方法。</p>
+<p><strong>setNeedsLayout()</strong></p>
+<p>触发 <code>layoutSubviews</code> 调用的最省资源的方法就是在你的视图上调用 <code>setNeedsLaylout</code> 方法。调用这个方法代表向系统表示视图的布局需要重新计算。<code>setNeedsLayout</code> 方法会立刻执行并返回，但在返回前不会真正更新视图。视图会在下一个 update cycle 中更新，就在系统调用视图们的 <code>layoutSubviews</code> 以及他们的所有子视图的 <code>layoutSubviews</code> 方法的时候。即使从 <code>setNeedsLayout</code> 返回后到视图被重新绘制并布局之间有一段任意时间的间隔，但是这个延迟不会对用户造成影响，因为永远不会长到对界面造成卡顿。</p>
+<p><strong>layoutIfNeeded()</strong></p>
+<p><code>layoutIfNeeded</code> 是另一个会让 <code>UIView</code> 触发 <code>layoutSubviews</code> 的方法。 当视图需要更新的时候，与 <code>setNeedsLayout()</code> 会让视图在下一周期调用 <code>layoutSubviews</code> 更新视图不同，<code>layoutIfNeeded</code> 会立即调用 <code>layoutSubviews</code> 方法。但是如果你调用了 <code>layoutIfNeeded</code> 之后，并且没有任何操作向系统表明需要刷新视图，那么就不会调用 <code>layoutsubview</code>。如果你在同一个 run loop 内调用两次 <code>layoutIfNeeded</code>，并且两次之间没有更新视图，第二个调用同样不会触发 <code>layoutSubviews</code> 方法。</p>
+<p>使用 <code>layoutIfNeeded</code>，则布局和重绘会立即发生并在函数返回之前完成（除非有正在运行中的动画）。这个方法在你需要依赖新布局，无法等到下一次 update cycle 的时候会比 <code>setNeedsLayout</code> 有用。除非是这种情况，否则你更应该使用 <code>setNeedsLayout</code>，这样在每次 run loop 中都只会更新一次布局。</p>
+<p>当对希望通过修改 constraint 进行动画时，这个方法特别有用。你需要在 animation block 之前对 self.view 调用 <code>layoutIfNeeded</code>，以确保在动画开始之前传播所有的布局更新。在 animation block 中设置新 constrait 后，需要再次调用 <code>layoutIfNeeded</code> 来动画到新的状态。</p>
+<h2 id="显示"><a href="#显示" class="headerlink" title="显示"></a>显示</h2><p>一个视图的显示包含了颜色、文本、图片和 Core Graphics 绘制等视图属性，不包括其本身和子视图的大小和位置。和布局的方法类似，显示也有触发更新的方法，它们由系统在检测到更新时被自动调用，或者我们可以手动调用直接刷新。</p>
+<p><strong>draw(_:)</strong></p>
+<p><code>UIView</code> 的 <code>draw</code> 方法（本文使用 Swift，对应 Objective-C 的 <code>drawRect</code>）对视图内容显示的操作，类似于视图布局的 <code>layoutSubviews</code> ，但是不同于 <code>layoutSubviews</code>，<code>draw</code> 方法不会触发后续对视图的子视图方法的调用。同样，和 <code>layoutSubviews</code> 一样，你不应该直接调用 <code>draw</code> 方法，而应该通过调用触发方法，让系统在 run loop 中的不同结点自动调用。</p>
+<p><strong>setNeedsDisplay()</strong></p>
+<p>这个方法类似于布局中的 <code>setNeedsLayout</code> 。它会给有内容更新的视图设置一个内部的标记，但在视图重绘之前就会返回。然后在下一个 update cycle 中，系统会遍历所有已标标记的视图，并调用它们的 <code>draw</code> 方法。如果你只想在下次更新时重绘部分视图，你可以调用 <code>setNeedsDisplay(_:)</code>，并把需要重绘的矩形部分传进去（<code>setNeedsDisplayInRect</code> in OC)。大部分时候，在视图中更新任何 UI 组件都会把相应的视图标记为“dirty”，通过设置视图“内部更新标记”，在下一次 update cycle 中就会重绘，而不需要显式的 <code>setNeedsDisplay</code> 调用。然而如果你有一个属性没有绑定到 UI 组件，但需要在每次更新时重绘视图，你可以定义他的 <code>didSet</code> 属性，并且调用 <code>setNeedsDisplay</code> 来触发视图合适的更新。</p>
+<p>有时候设置一个属性要求自定义绘制，这种情况下你需要重写 <code>draw</code> 方法。在下面的例子中，设置 <code>numberOfPoints</code> 会触发系统系统根据具体点数绘制视图。在这个例子中，你需要在 <code>draw</code> 方法中实现自定义绘制，并在 <code>numberOfPoints</code> 的 property observer 里调用 <code>setNeedsDisplay</code>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">class MyView: UIView &#123;</span><br><span class="line">    var numberOfPoints = 0 &#123;</span><br><span class="line">        didSet &#123;</span><br><span class="line">            setNeedsDisplay()</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override func draw(_ rect: CGRect) &#123;</span><br><span class="line">        switch numberOfPoints &#123;</span><br><span class="line">        case 0:</span><br><span class="line">            return</span><br><span class="line">        case 1:</span><br><span class="line">            drawPoint(rect)</span><br><span class="line">        case 2:</span><br><span class="line">            drawLine(rect)</span><br><span class="line">        case 3:</span><br><span class="line">            drawTriangle(rect)</span><br><span class="line">        case 4:</span><br><span class="line">            drawRectangle(rect)</span><br><span class="line">        case 5:</span><br><span class="line">            drawPentagon(rect)</span><br><span class="line">        default:</span><br><span class="line">            drawEllipse(rect)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>视图的显示方法里没有类似布局中的 <code>layoutIfNeeded</code> 这样可以触发立即更新的方法。通常情况下等到下一个更新周期再重新绘制视图也无所谓。</p>
+<p>## </p>
+<h2 id="约束"><a href="#约束" class="headerlink" title="约束"></a>约束</h2><p>自动布局包含三步来布局和重绘视图。第一步是更新约束，系统会计算并给视图设置所有要求的约束。第二步是布局阶段，布局引擎计算视图和子视图的 frame 并且将它们布局。最后一步完成这一循环的是显示阶段，重绘视图的内容，如实现了 <code>draw</code> 方法则调用 <code>draw</code>。</p>
+<p><strong>updateConstraints()</strong></p>
+<p>这个方法用来在自动布局中动态改变视图约束。和布局中的 <code>layoutSubviews()</code> 方法或者显示中的 <code>draw</code> 方法类似，<code>updateConstraints()</code> 只应该被重载，绝不要在代码中显式地调用。通常你只应该在 <code>updateConstraints</code> 方法中实现必须要更新的约束。静态的约束应该在 interface builder、视图的初始化方法或者 <code>viewDidLoad()</code> 方法中指定。</p>
+<p>通常情况下，设置或者解除约束、更改约束的优先级或者常量值，或者从视图层级中移除一个视图时都会设置一个内部的标记 “update constarints”，这个标记会在下一个更新周期中触发调用 <code>updateConstrains</code>。当然，也有手动给视图打上“update constarints” 标记的方法，如下。</p>
+<p><strong>setNeedsUpdateConstraints()</strong></p>
+<p>调用 <code>setNeedsUpdateConstraints()</code> 会保证在下一次更新周期中更新约束。它通过标记“update constraints”来触发 <code>updateConstraints()</code>。这个方法和 <code>setNeedsDisplay()</code> 以及 <code>setNeedsLayout()</code> 方法的工作机制类似。</p>
+<p><strong>updateConstraintsIfNeeded()</strong></p>
+<p>对于使用自动布局的视图来说，这个方法与 <code>layoutIfNeeded</code> 等价。它会检查 “update constraints”标记（可以被 <code>setNeedsUpdateConstraints</code> 或者 <code>invalidateInstrinsicContentSize</code>方法自动设置）。如果它认为这些约束需要被更新，它会立即触发 <code>updateConstraints()</code> ，而不会等到 run loop 的末尾。</p>
+<p><strong>invalidateIntrinsicContentSize()</strong></p>
+<p>自动布局中某些视图拥有 <code>intrinsicContentSize</code> 属性，这是视图根据它的内容得到的自然尺寸。一个视图的 <code>intrinsicContentSize</code> 通常由所包含的元素的约束决定，但也可以通过重载提供自定义行为。调用 <code>invalidateIntrinsicContentSize()</code> 会设置一个标记表示这个视图的 <code>intrinsicContentSize</code> 已经过期，需要在下一个布局阶段重新计算。</p>
+<p>## </p>
+<h2 id="它们是如何连接起来的"><a href="#它们是如何连接起来的" class="headerlink" title="它们是如何连接起来的"></a>它们是如何连接起来的</h2><p>布局、显示和约束都遵循着相似的模式，例如他们更新的方式以及如何在 run loop 的不同时间点上强制更新。任一组件都有一个实际去更新的方法（<code>layoutSubviews</code>, <code>draw</code>, 和 <code>updateConstraints</code>），你可以重写来手动操作视图，但是任何情况下都不要显式调用。这个方法只在 run loop 的末端会被调用，如果视图被标记了告诉系统该视图需要被更新的标记的话。有一些操作会自动设置这个标志，但是也有一些方法允许您显式地设置它。对于布局和约束相关的更新，如果你等不到在 run loop 末端才更新（例如：其他行为依赖于新布局），有方法可以让你立即更新，并保证 “update layout” 标记被正确标记。下面的表格列出了任意组件会怎样更新及其对应方法。</p>
+<p><img src="https://nos.netease.com/cloud-website-bucket/201809191350518b3586dc-7fa6-40ef-807e-842c9612eee6.png" alt="img"><em>**</em></p>
+<p>下面的流程图总结了 update cycle 和 event loop 之间的交互，并指出了上文提到的方法在 run loop 运行期间的位置。你可以在 run loop 中的任意一点显式地调用 layoutIfNeeded 或者 updateConstraintsIfNeeded，需要记住，这开销会很大。在循环的末端是 update cycle，如果视图被设置了特定的 “update constraints”，“update layout” 或者 “needs display” 标记，在这节点会更新约束、布局以及展示。一旦这些更新结束，runloop 会重新启动。</p>
+<p><img src="https://nos.netease.com/cloud-website-bucket/20180919135102d2c48381-c7aa-4a02-9ec4-b1739323d12d.png" alt="img"><em>**</em></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/10/19/揭秘 iOS 布局/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-Makefile" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
   <div class="article-inner">
     
@@ -946,272 +1426,9 @@
 
 
   
-    <article id="post-隐式动画" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>这其实就是所谓的<strong>隐式</strong>动画。之所以叫隐式是因为我们并没有指定任何动画的类型。我们仅仅改变了一个属性，然后Core Animation来决定如何并且何时去做动画。Core Animaiton同样支持<strong>显式</strong>动画，下章详细说明。</p>
-<p>但当你改变一个属性，Core Animation是如何判断动画类型和持续时间的呢？实际上动画执行的时间取决于当前<strong>事务</strong>的设置，动画类型取决于<strong>图层行为</strong>。</p>
-<p>事务实际上是Core Animation用来包含一系列属性动画集合的机制，任何用指定事务去改变可以做动画的图层属性都不会立刻发生变化，而是当事务一旦<strong>提交</strong>的时候开始用一个动画过渡到新值。</p>
-<p>事务是通过<code>CATransaction</code>类来做管理，这个类的设计有些奇怪，不像你从它的命名预期的那样去管理一个简单的事务，而是管理了一叠你不能访问的事务。<code>CATransaction</code>没有属性或者实例方法，并且也不能用<code>+alloc</code>和<code>-init</code>方法创建它。但是可以用<code>+begin</code>和<code>+commit</code>分别来入栈或者出栈。</p>
-<p>任何可以做动画的图层属性都会被添加到栈顶的事务，你可以通过<code>+setAnimationDuration:</code>方法设置当前事务的动画时间，或者通过<code>+animationDuration</code>方法来获取值（默认0.25秒）。</p>
-<p>Core Animation在每个<strong>run loop</strong>周期中自动开始一次新的事务（run loop是iOS负责收集用户输入，处理定时器或者网络事件并且重新绘制屏幕的东西），即使你不显式的用<code>[CATransaction begin]</code>开始一次事务，任何在一次run loop循环中属性的改变都会被集中起来，然后做一次0.25秒的动画。</p>
-<p>明白这些之后，我们就可以轻松修改变色动画的时间了。我们当然可以用当前事务的<code>+setAnimationDuration:</code>方法来修改动画时间，但在这里我们首先起一个新的事务，于是修改时间就不会有别的副作用。因为修改当前事务的时间可能会导致同一时刻别的动画（如屏幕旋转），所以最好还是在调整动画之前压入一个新的事务。</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/09/13/隐式动画/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-iOS设置圆角的方法及指定圆角的位置" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="iOS设置圆角的方法及指定圆角的位置"><a href="#iOS设置圆角的方法及指定圆角的位置" class="headerlink" title="iOS设置圆角的方法及指定圆角的位置"></a>iOS设置圆角的方法及指定圆角的位置</h1><ul>
-<li>在iOS开发中，我们经常会遇到设置圆角的问题, 以下是几种设置圆角的方法:</li>
-</ul>
-<h3 id="第一种方法-通过设置layer的属性"><a href="#第一种方法-通过设置layer的属性" class="headerlink" title="第一种方法: 通过设置layer的属性"></a>第一种方法: 通过设置layer的属性</h3><h3 id="代码"><a href="#代码" class="headerlink" title="代码:"></a>代码:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">UIImageView *imageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@&quot;willwang&quot;]];</span><br><span class="line"></span><br><span class="line">//只需要设置layer层的两个属性</span><br><span class="line">//设置圆角</span><br><span class="line">imageView.layer.cornerRadius =50</span><br><span class="line"></span><br><span class="line">//将多余的部分切掉</span><br><span class="line">imageView.layer.masksToBounds = YES;</span><br><span class="line"></span><br><span class="line">[self.view addSubview:imageView];</span><br></pre></td></tr></table></figure>
-<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<ul>
-<li>这个实现方法里maskToBounds会触发离屏渲染(offscreen rendering)，GPU在当前屏幕缓冲区外新开辟一个渲染缓冲区进行工作，也就是离屏渲染，这会给我们带来额外的性能损耗，如果这样的圆角操作达到一定数量，会触发缓冲区的频繁合并和上下文的的频繁切换，性能的代价会宏观地表现在用户体验上&lt;掉帧&gt;不建议使用.</li>
-</ul>
-<h3 id="第二种方法-使用贝塞尔曲线UIBezierPath和Core-Graphics框架画出一个圆角"><a href="#第二种方法-使用贝塞尔曲线UIBezierPath和Core-Graphics框架画出一个圆角" class="headerlink" title="第二种方法: 使用贝塞尔曲线UIBezierPath和Core Graphics框架画出一个圆角"></a>第二种方法: 使用贝塞尔曲线UIBezierPath和Core Graphics框架画出一个圆角</h3><h3 id="效果图"><a href="#效果图" class="headerlink" title="效果图:"></a>效果图:</h3><p><img src="http://blog.cocoachina.com/uploads/attachments/595139/20170628/267cd0dd9efbd734e932702da7c1347f.jpg" alt=" 第二种.jpg "></p>
-<h3 id="代码-1"><a href="#代码-1" class="headerlink" title="代码:"></a>代码:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(100, 100, 100, 100)];</span><br><span class="line"></span><br><span class="line"> imageView.image = [UIImage imageNamed:@&quot;willwang&quot;];</span><br><span class="line"></span><br><span class="line">    //开始对imageView进行画图</span><br><span class="line">UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, NO, 0.0);</span><br><span class="line"></span><br><span class="line">    //使用贝塞尔曲线画出一个圆形图</span><br><span class="line">    [[UIBezierPath bezierPathWithRoundedRect:imageView.bounds cornerRadius:imageView.frame.size.width] addClip];</span><br><span class="line"></span><br><span class="line">    [imageView drawRect:imageView.bounds];</span><br><span class="line"></span><br><span class="line">    imageView.image = UIGraphicsGetImageFromCurrentImageContext();</span><br><span class="line"></span><br><span class="line">     //结束画图</span><br><span class="line">    UIGraphicsEndImageContext();</span><br><span class="line"></span><br><span class="line">    [self.view addSubview:imageView];</span><br></pre></td></tr></table></figure>
-<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<ul>
-<li>UIGraphicsBeginImageContextWithOptions(CGSize size, BOOL opaque, CGFloat scale) 各参数含义:</li>
-<li>size —— 新创建的位图上下文的大小</li>
-<li>opaque —— 透明开关，如果图形完全不用透明，设置为YES以优化位图的存储。</li>
-<li>scale —— 缩放因子 iPhone 4是2.0，其他是1.0。虽然这里可以用[UIScreen mainScreen].scale来获取，但实际上设为0后，系统就会自动设置正确的比例</li>
-</ul>
-<h3 id="第三种方法-使用Core-Graphics框架画出一个圆角"><a href="#第三种方法-使用Core-Graphics框架画出一个圆角" class="headerlink" title="第三种方法: 使用Core Graphics框架画出一个圆角"></a>第三种方法: 使用Core Graphics框架画出一个圆角</h3><h3 id="代码-2"><a href="#代码-2" class="headerlink" title="代码:"></a>代码:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(100, 200, 100, 100)];</span><br><span class="line"></span><br><span class="line">imageView.image = [UIImage imageNamed:@&quot;willwang&quot;];</span><br><span class="line"></span><br><span class="line">//开始对imageView进行画图</span><br><span class="line">UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, NO, 1.0);</span><br><span class="line"></span><br><span class="line">// 获得图形上下文</span><br><span class="line">CGContextRef ctx = UIGraphicsGetCurrentContext();</span><br><span class="line"></span><br><span class="line">// 设置一个范围</span><br><span class="line">CGRect rect = CGRectMake(0, 0, imageView.frame.size.width, imageView.frame.size.height);</span><br><span class="line"></span><br><span class="line">// 根据一个rect创建一个椭圆</span><br><span class="line">CGContextAddEllipseInRect(ctx, rect);</span><br><span class="line"></span><br><span class="line">// 裁剪</span><br><span class="line">CGContextClip(ctx);</span><br><span class="line"></span><br><span class="line">// 将原照片画到图形上下文</span><br><span class="line">[imageView.image drawInRect:rect];</span><br><span class="line"></span><br><span class="line">// 从上下文上获取剪裁后的照片</span><br><span class="line">UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();</span><br><span class="line"></span><br><span class="line">// 关闭上下文</span><br><span class="line">UIGraphicsEndImageContext();</span><br><span class="line"></span><br><span class="line">imageView.image = newImage;</span><br><span class="line"></span><br><span class="line">[self.view addSubview:imageView];</span><br></pre></td></tr></table></figure>
-<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<h3 id="第四种方法-使用CAShapeLayer和UIBezierPath设置圆角"><a href="#第四种方法-使用CAShapeLayer和UIBezierPath设置圆角" class="headerlink" title="第四种方法: 使用CAShapeLayer和UIBezierPath设置圆角"></a>第四种方法: 使用CAShapeLayer和UIBezierPath设置圆角</h3><h3 id="代码-3"><a href="#代码-3" class="headerlink" title="代码:"></a>代码:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(100, 100, 100, 100)];</span><br><span class="line"></span><br><span class="line">    imageView.image = [UIImage imageNamed:@&quot;willwang&quot;];</span><br><span class="line"></span><br><span class="line">    UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:imageView.bounds byRoundingCorners:UIRectCornerAllCorners cornerRadii:imageView.bounds.size];</span><br><span class="line"></span><br><span class="line">    CAShapeLayer *maskLayer = [[CAShapeLayer alloc]init];</span><br><span class="line"></span><br><span class="line">    //设置大小</span><br><span class="line">    maskLayer.frame = imageView.bounds;</span><br><span class="line"></span><br><span class="line">    //设置图形样子</span><br><span class="line">    maskLayer.path = maskPath.CGPath;</span><br><span class="line"></span><br><span class="line">    imageView.layer.mask = maskLayer;</span><br><span class="line"></span><br><span class="line">    [self.view addSubview:imageView];</span><br></pre></td></tr></table></figure>
-<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<h3 id="第四种方法延伸-指定需要成为圆角的角"><a href="#第四种方法延伸-指定需要成为圆角的角" class="headerlink" title="第四种方法延伸 指定需要成为圆角的角"></a>第四种方法延伸 指定需要成为圆角的角</h3><h3 id="方法"><a href="#方法" class="headerlink" title="方法:"></a>方法:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">+ (UIBezierPath *)bezierPathWithRoundedRect:(CGRect)rect</span><br><span class="line">                          byRoundingCorners:(UIRectCorner)corners</span><br><span class="line">                                cornerRadii:(CGSize)cornerRadii</span><br><span class="line">corners参数指定了要成为圆角的角, 枚举类型如下:</span><br><span class="line">typedef NS_OPTIONS(NSUInteger, UIRectCorner) &#123;</span><br><span class="line">    UIRectCornerTopLeft     = 1 &lt;&amp;lt; 0,</span><br><span class="line">    UIRectCornerTopRight    = 1 &lt;&amp;lt; 1,</span><br><span class="line">    UIRectCornerBottomLeft  = 1 &lt;&amp;lt; 2,</span><br><span class="line">    UIRectCornerBottomRight = 1 &lt;&amp;lt; 3,</span><br><span class="line">    UIRectCornerAllCorners  = ~0UL</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<h3 id="效果图-1"><a href="#效果图-1" class="headerlink" title="效果图:"></a>效果图:</h3><p><img src="http://blog.cocoachina.com/uploads/attachments/595139/20170628/351865f49589e750d202fc23979f144a.jpg" alt=" 14986372606268.jpg "></p>
-<h3 id="代码-4"><a href="#代码-4" class="headerlink" title="代码:"></a>代码:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">//设置视图位置和大小</span><br><span class="line">    UIView *myView = [[UIView alloc] initWithFrame:CGRectMake(120, 300, 100, 50)];</span><br><span class="line"></span><br><span class="line">    //设置背景颜色</span><br><span class="line">    myView.backgroundColor = [UIColor redColor];</span><br><span class="line"></span><br><span class="line">    //添加</span><br><span class="line">    [self.view addSubview:myView];</span><br><span class="line"></span><br><span class="line">    //绘制圆角 要设置的圆角 使用“|”来组合</span><br><span class="line">    UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:myView.bounds byRoundingCorners:UIRectCornerTopLeft | UIRectCornerBottomRight cornerRadii:CGSizeMake(20, 20)];</span><br><span class="line"></span><br><span class="line">    CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];</span><br><span class="line"></span><br><span class="line">    //设置大小</span><br><span class="line">    maskLayer.frame = myView.bounds;</span><br><span class="line"></span><br><span class="line">    //设置图形样子</span><br><span class="line">    maskLayer.path = maskPath.CGPath;</span><br><span class="line"></span><br><span class="line">    myView.layer.mask = maskLayer;</span><br><span class="line"></span><br><span class="line">    UILabel *label = [[UILabel alloc]init];</span><br><span class="line"></span><br><span class="line">    //添加文字</span><br><span class="line">    label.text = @&quot;willwang&quot;;</span><br><span class="line"></span><br><span class="line">    //文字颜色</span><br><span class="line">    label.textColor = [UIColor whiteColor];</span><br><span class="line"></span><br><span class="line">    [myView addSubview: label];</span><br><span class="line"></span><br><span class="line">    //自动布局</span><br><span class="line">    [label mas_makeConstraints:^(MASConstraintMaker *make) &#123;</span><br><span class="line"></span><br><span class="line">        make.center.equalTo(myView);</span><br><span class="line">    &#125;];</span><br></pre></td></tr></table></figure>
-<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
-<h3 id="第五种方法-在storyboard或xib中设置"><a href="#第五种方法-在storyboard或xib中设置" class="headerlink" title="第五种方法 在storyboard或xib中设置"></a>第五种方法 在storyboard或xib中设置</h3><p><img src="http://blog.cocoachina.com/uploads/attachments/595139/20170628/fdba85417246ba90bbc49681265ffc1b.jpg" alt=" 14986398280102.jpg "></p>
-<p>少而好学，如日出之阳； 壮而好学，如日中之光； 老而好学，如炳烛之明。</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/09/13/iOS设置圆角的方法及指定圆角的位置/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-iOS实现3D旋转" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="iOS实现3D旋转"><a href="#iOS实现3D旋转" class="headerlink" title="iOS实现3D旋转"></a>iOS实现3D旋转</h1><p>转载    <a href="https://blog.csdn.net/u013749108/article/details/68951938" target="_blank" rel="noopener">https://blog.csdn.net/u013749108/article/details/68951938</a></p>
-<p>最近看到了一个3D旋转的动画，就想着自己去实现以下。那么，接下来就通过这边文章记录以下学习过程，慢慢深入了解以下3D旋转。</p>
-<p><strong>一、如何旋转</strong></p>
-<p>每个View都在系统的坐标系中，就手机屏幕来说，左上角为 (0 , 0)，向右横向的为X轴正方向，向下纵向的为Y轴正方向，垂直于手机屏幕的方向既Z轴方向。<br><img src="https://img-blog.csdn.net/20170402132030626?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMzc0OTEwOA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
-<p>所以Z轴的旋转属于平面上的旋转，实现3D效果的前提就是有X轴或者Y轴的参与。</p>
-<p><strong>二、沿着Y轴旋转</strong></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">先看一下CATransform3DMakeRotation的定义：</span><br><span class="line"></span><br><span class="line">CA_EXTERN CATransform3D CATransform3DMakeRotation (CGFloat angle, CGFloat x, CGFloat y, CGFloat z)</span><br><span class="line"></span><br><span class="line">angle：角度    x,y,z分别代表是三个方向的坐标12345</span><br></pre></td></tr></table></figure>
-<p>按照这个思路，于是我写下如下的代码：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">CATransform3D rotate = CATransform3DMakeRotation(M_PI/6, 0, 1, 0);</span><br><span class="line"></span><br><span class="line">self.imageView.layer.transform = rotate;</span><br><span class="line">1234</span><br></pre></td></tr></table></figure>
-<p>运行之后可以发现，imageView 并没有出现3D效果，只是单纯的在Y轴缩短了一些。为何会出现这样的效果？</p>
-<p>查资料后发现，原来在CALayer的显示系统中，默认使用的是正交投影，没有远小近大效果，所以我们对 imageView 的旋转操作，只能造成Y轴上的缩放。而无法观察到3D 的效果。</p>
-<p>其实这个时候 imageView 已经沿着Y轴旋转了 M_PI/6 ，但只是我们无法直接观察到这种效果。</p>
-<p><strong>三、添加3D效果</strong></p>
-<p>这时候我们需要用到透视投影。</p>
-<p>先看每个矩阵里数字代表的含义：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"> struct CATransform3D</span><br><span class="line"> &#123;</span><br><span class="line"></span><br><span class="line"> CGFloat m11（x缩放）, m12（y切变）, m13（旋转）, m14（）;</span><br><span class="line"></span><br><span class="line"> CGFloat m21（x切变）, m22（y缩放）, m23（）, m24（）;</span><br><span class="line"></span><br><span class="line"> CGFloat m31（旋转）, m32（）, m33（）, m34（透视效果）;</span><br><span class="line"></span><br><span class="line"> CGFloat m41（x平移）, m42（y平移）, m43（z平移）, m44（）;</span><br><span class="line"></span><br><span class="line"> &#125;;</span><br><span class="line"></span><br><span class="line">我们所需要的正是 m34 。</span><br><span class="line">123456789101112131415</span><br></pre></td></tr></table></figure>
-<p>构造一个旋转矩阵</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CATransform3D rotate = CATransform3DMakeRotation(M_PI/6, 0, 1, 0);1</span><br></pre></td></tr></table></figure>
-<p>构造一个透视矩阵</p>
-<p>其中：M34属性 控制透视效果</p>
-<p>正的值向下（左）方往里缩放 负的值上（右）方往里缩放</p>
-<p>disZ 控制透视的强度 数字越小 深度越大 拉伸效果越明显</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CGFloat disZ = 200;</span><br><span class="line"></span><br><span class="line">CATransform3D scale = CATransform3DIdentity;</span><br><span class="line"></span><br><span class="line">scale.m34 = -1.0f/disZ; 12345</span><br></pre></td></tr></table></figure>
-<p>然后把两个矩阵相乘 旋转矩阵*透视矩阵</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CATransform3D transform = CATransform3DConcat(rotate, scale);    1</span><br></pre></td></tr></table></figure>
-<p>把最后的结果赋给 imageView 的 layer 的 transform 。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">self.imageView.layer.transform = transform;1</span><br></pre></td></tr></table></figure>
-<p>运行起来，具有3D效果的一张图就展示在我们的眼前了，啧啧，是不是挺简单。</p>
-<p><strong>四、控制旋转中心轴</strong></p>
-<p>如果通过角度的递增，给我们的3D旋转加一个动画，我们就会明显的看到，默认的以平行于Y轴的 imageView 的中心轴进行旋转。那么如果让我们 imageView 以自己的左边线进行旋转呢？</p>
-<p>其实也很简单，旋转是以layer的锚点为中心进行旋转的。默认是 (0.5 , 0.5) 。我们只需要改变锚点的位置就好了。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">image.layer.anchorPoint = CGPointMake(0, 0.5);</span><br></pre></td></tr></table></figure>
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/09/12/iOS实现3D旋转/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="ios-core-animation-OC-Cube3D基于拖动手势的视图3D旋转效果"><a href="#ios-core-animation-OC-Cube3D基于拖动手势的视图3D旋转效果" class="headerlink" title="ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果"></a>ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果</h1><p>在网上看到有做html“程序员500行JavaScript开发拖拽3D盒子炫酷”，刚好最近在看《iOS核心动画高级技巧》，于是试着用OC实现一下 其中手势拖拽位置判断基于“iOS CoreAnimation专题——实战篇（四）基于拖动手势的视图3D旋转效果”：<a href="https://blog.csdn.net/u013282174/article/details/80311284" target="_blank" rel="noopener">https://blog.csdn.net/u013282174/article/details/80311284</a> （位置没有做仔细处理，有兴趣可以好好看下这篇文章研究下）</p>
-<p>地址：<a href="https://github.com/yuntiaoOS/ios_core_animation-OC-Cube3D" target="_blank" rel="noopener">https://github.com/yuntiaoOS/ios_core_animation-OC-Cube3D</a></p>
-<p><img src="https://ws3.sinaimg.cn/large/0069RVTdgy1fv6ubyroaig30do0ox1fw.gif" alt="image"></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/09/12/ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/page/2/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+      <a class="extend prev" rel="prev" href="/page/2/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/">Next &raquo;</a>
     </nav>
   
 

@@ -6,15 +6,26 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yuntiaoos.github.io/yuntianBLOG">
-  <title>Archives | yuntian&#39;s blog</title>
+  <title>yuntian&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
+  <meta name="description" content="[Jinkey 原创]震惊！iOS 系统居然自带悬浮窗口调试工具2017-05-27 3763   原文链接 : 震惊！iOS 系统居然自带悬浮窗口调试工具 —— Jinkey 原创 原文作者 : Jinkey   1 背景 英文原文：http://ryanipete.com/blog/ios/swift/objective-c/uidebugginginformationoverlay/ 我写得">
+<meta property="og:type" content="article">
 <meta property="og:title" content="yuntian&#39;s blog">
-<meta property="og:url" content="https://yuntiaoos.github.io/yuntianBLOG/archives/page/3/index.html">
+<meta property="og:url" content="https://yuntiaoos.github.io/yuntianBLOG/2019/12/26/[Jinkey 原创]震惊！iOS 系统居然自带悬浮窗口调试工具/index.html">
 <meta property="og:site_name" content="yuntian&#39;s blog">
+<meta property="og:description" content="[Jinkey 原创]震惊！iOS 系统居然自带悬浮窗口调试工具2017-05-27 3763   原文链接 : 震惊！iOS 系统居然自带悬浮窗口调试工具 —— Jinkey 原创 原文作者 : Jinkey   1 背景 英文原文：http://ryanipete.com/blog/ios/swift/objective-c/uidebugginginformationoverlay/ 我写得">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/854231-2ef0080f4eea8935.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/854231-66b7d3e56dd27cff.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/854231-bbae2392b4a80173.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/854231-04044fb28c7d6910.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/854231-7f0f0d183cc50196.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/854231-d8eae18f88927c88.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2019-12-26T08:08:56.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="yuntian&#39;s blog">
+<meta name="twitter:description" content="[Jinkey 原创]震惊！iOS 系统居然自带悬浮窗口调试工具2017-05-27 3763   原文链接 : 震惊！iOS 系统居然自带悬浮窗口调试工具 —— Jinkey 原创 原文作者 : Jinkey   1 背景 英文原文：http://ryanipete.com/blog/ios/swift/objective-c/uidebugginginformationoverlay/ 我写得">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/854231-2ef0080f4eea8935.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240">
   
     <link rel="alternative" href="/atom.xml" title="yuntian&#39;s blog" type="application/atom+xml">
   
@@ -150,235 +161,183 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-[Jinkey 原创]震惊！iOS 系统居然自带悬浮窗口调试工具" class="article article-type-post " itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Jinkey-原创-震惊！iOS-系统居然自带悬浮窗口调试工具"><a href="#Jinkey-原创-震惊！iOS-系统居然自带悬浮窗口调试工具" class="headerlink" title="[Jinkey 原创]震惊！iOS 系统居然自带悬浮窗口调试工具"></a><a href="https://swift.gg/2017/05/27/ui-debugging-information-overlay/" target="_blank" rel="noopener">[Jinkey 原创]震惊！iOS 系统居然自带悬浮窗口调试工具</a></h1><p>2017-05-27 3763</p>
+<blockquote>
+<ul>
+<li>原文链接 : <a href="http://www.jianshu.com/p/736353b5cfaf?utm_campaign=hugo&amp;utm_medium=reader_share&amp;utm_content=note&amp;utm_source=weixin-friends&amp;from=singlemessage&amp;isappinstalled=1" target="_blank" rel="noopener">震惊！iOS 系统居然自带悬浮窗口调试工具 —— Jinkey 原创</a></li>
+<li>原文作者 : <a href="http://www.jianshu.com/u/8354f5625fe4" target="_blank" rel="noopener">Jinkey</a></li>
+</ul>
+</blockquote>
+<h2 id="1-背景"><a href="#1-背景" class="headerlink" title="1 背景"></a>1 背景</h2><blockquote>
+<p>英文原文：<br><a href="http://ryanipete.com/blog/ios/swift/objective-c/uidebugginginformationoverlay/" target="_blank" rel="noopener">http://ryanipete.com/blog/ios/swift/objective-c/uidebugginginformationoverlay/</a></p>
+<p>我写得这个并不是翻译而是用自己的理解重新表述这个功能，和原文内容有出入，有能力的可以查看英文原文。</p>
+</blockquote>
+<p>我们经常使用各种调试工具，或者开源库来支持悬浮窗调试信息，但苹果的私有方法就提供了 <code>UIDebuggingInformationOverlay</code> 。</p>
+<p><a href="http://upload-images.jianshu.io/upload_images/854231-2ef0080f4eea8935.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" target="_blank" rel="noopener"><img src="http://upload-images.jianshu.io/upload_images/854231-2ef0080f4eea8935.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240" alt="img"></a></p>
+<h2 id="2-如何使用"><a href="#2-如何使用" class="headerlink" title="2 如何使用"></a>2 如何使用</h2><p>在 <code>AppDelegate</code> 的 <code>didFinishLaunchingWithOptions</code> 方法中加入两行代码即可。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">let overlayClass = NSClassFromString(&quot;UIDebuggingInformationOverlay&quot;) as? UIWindow.Type</span><br><span class="line">_ = overlayClass?.perform(NSSelectorFromString(&quot;prepareDebuggingOverlay&quot;))</span><br></pre></td></tr></table></figure>
+<p>运行程序后，两根手指点击状态栏即可调起这个调试的悬浮层。</p>
+<h2 id="3-能做什么"><a href="#3-能做什么" class="headerlink" title="3 能做什么"></a>3 能做什么</h2><h3 id="3-1-查看整个-window-的-View-嵌套关系"><a href="#3-1-查看整个-window-的-View-嵌套关系" class="headerlink" title="3.1 查看整个 window 的 View 嵌套关系"></a>3.1 查看整个 <code>window</code> 的 <code>View</code> 嵌套关系</h3><blockquote>
+<p>View Hierarchy</p>
+</blockquote>
+<p>这个功能可以查看页面层级的结构树，点击感叹号进入详情页（点 <code>cell</code> 是没反应的），会展示那个 <code>view</code> 的 <code>frame</code> 、 <code>bounds</code> 和其他一些实例变量。</p>
+<p><a href="http://upload-images.jianshu.io/upload_images/854231-66b7d3e56dd27cff.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" target="_blank" rel="noopener"><img src="http://upload-images.jianshu.io/upload_images/854231-66b7d3e56dd27cff.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240" alt="img"></a></p>
+<h3 id="3-2-查看当前-ViewController-的属性"><a href="#3-2-查看当前-ViewController-的属性" class="headerlink" title="3.2 查看当前 ViewController 的属性"></a>3.2 查看当前 <code>ViewController</code> 的属性</h3><blockquote>
+<p>VC Hierarchy</p>
+</blockquote>
+<p>查看激活的 <code>ViewController</code> 的 <code>childrenViewCotroller</code> 的结构树和相关属性：</p>
+<p><a href="http://upload-images.jianshu.io/upload_images/854231-bbae2392b4a80173.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" target="_blank" rel="noopener"><img src="http://upload-images.jianshu.io/upload_images/854231-bbae2392b4a80173.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240" alt="img"></a></p>
+<h3 id="3-3-查看-UIApplication-的成员属性"><a href="#3-3-查看-UIApplication-的成员属性" class="headerlink" title="3.3 查看 UIApplication 的成员属性"></a>3.3 查看 <code>UIApplication</code> 的成员属性</h3><blockquote>
+<p>Ivar Explorer</p>
+</blockquote>
+<p><a href="http://upload-images.jianshu.io/upload_images/854231-04044fb28c7d6910.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" target="_blank" rel="noopener"><img src="http://upload-images.jianshu.io/upload_images/854231-04044fb28c7d6910.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240" alt="img"></a></p>
+<h3 id="3-4-测量组件大小"><a href="#3-4-测量组件大小" class="headerlink" title="3.4 测量组件大小"></a>3.4 测量组件大小</h3><blockquote>
+<p>Measure</p>
+</blockquote>
+<p>一开始还挺懵逼不知道要怎么用，后来发现手指是直接在悬浮窗的外部进行进行拖动就可以了，如果你的组件被悬浮窗挡住了好像就没办法了。</p>
+<p>选择 Vertical ，手指在屏幕拖动即可显示某个组件的高度；</p>
+<p>选择 Horizontal ，手指在屏幕拖动即可显示某个组件的 宽度；</p>
+<p><a href="http://upload-images.jianshu.io/upload_images/854231-7f0f0d183cc50196.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" target="_blank" rel="noopener"><img src="http://upload-images.jianshu.io/upload_images/854231-7f0f0d183cc50196.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240" alt="img"></a></p>
+<h3 id="3-5-效果对比"><a href="#3-5-效果对比" class="headerlink" title="3.5 效果对比"></a>3.5 效果对比</h3><blockquote>
+<p>Spec Compare</p>
+</blockquote>
+<p>从相册读取一个图片（你必须在info.plist 先配置相册权限NSPhotoLibraryUsageDescription）和当前界面对比。</p>
+<p>点击 Add -&gt; 从相册选择一个界面截图 -&gt; 点击刚添加的截图 -&gt; 手指在屏幕（悬浮窗外部）上下滑动 -&gt; 即可动态改变截图的透明度来对比截图和当前界面的差异 -&gt; 双击退出。</p>
+<p><a href="http://upload-images.jianshu.io/upload_images/854231-d8eae18f88927c88.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" target="_blank" rel="noopener"><img src="http://upload-images.jianshu.io/upload_images/854231-d8eae18f88927c88.png?imageMogr2/auto-orient/strip%257CimageView2/2/w/1240" alt="img"></a></p>
+<p>我的微信公众号 <code>jinkey-love</code> 欢迎交流</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/11/06/python-error-list/" class="archive-article-date">
-  	<time datetime="2018-11-06T07:33:11.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-11-06</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yuntiaoos.github.io/yuntianBLOG/2019/12/26/[Jinkey 原创]震惊！iOS 系统居然自带悬浮窗口调试工具/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/11/06/iOS开发，Bluetooth/" class="archive-article-date">
-  	<time datetime="2018-11-06T05:36:14.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-11-06</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/10/25/适配iPhone XR:iPhone XS Max/" class="archive-article-date">
-  	<time datetime="2018-10-25T07:03:57.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-10-25</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
+<nav id="article-nav">
+  
+  
+    <a href="/2019/12/17/(强烈推荐)移动端音视频从零到上手/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title"></div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/10/19/揭秘 iOS 布局/" class="archive-article-date">
-  	<time datetime="2018-10-19T09:44:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-10-19</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/27/Makefile/" class="archive-article-date">
-  	<time datetime="2018-09-27T06:39:45.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-27</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
+        
+        
+    </div>
+</aside>
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/26/使用ImageIO框架-立刻加载图片/" class="archive-article-date">
-  	<time datetime="2018-09-26T03:59:33.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-26</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/25/Swift 下用 lazy 让方法只被调用一次/" class="archive-article-date">
-  	<time datetime="2018-09-25T03:18:28.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-25</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/21/swift 防止按钮重复点击（时间等候模式:事件完成模式）/" class="archive-article-date">
-  	<time datetime="2018-09-21T10:22:23.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-21</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/21/swift4.0 Change:指针和swift变量/" class="archive-article-date">
-  	<time datetime="2018-09-21T10:12:37.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-21</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/14/iOS判断设备WiFi是否打开/" class="archive-article-date">
-  	<time datetime="2018-09-14T01:57:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-14</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
   
-    </div></section>
   
 
-    
-    <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/archives/page/2/">&laquo; Prev</a><a class="page-number" href="/archives/">1</a><a class="page-number" href="/archives/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/archives/page/4/">4</a><a class="extend next" rel="next" href="/archives/page/4/">Next &raquo;</a>
-    </nav>
+  
+
+  
+
   
 
 
@@ -402,8 +361,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

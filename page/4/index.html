@@ -6,11 +6,11 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yuntiaoos.github.io/yuntianBLOG">
-  <title>Archives | yuntian&#39;s blog</title>
+  <title>yuntian&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta property="og:type" content="website">
 <meta property="og:title" content="yuntian&#39;s blog">
-<meta property="og:url" content="https://yuntiaoos.github.io/yuntianBLOG/archives/page/3/index.html">
+<meta property="og:url" content="https://yuntiaoos.github.io/yuntianBLOG/page/4/index.html">
 <meta property="og:site_name" content="yuntian&#39;s blog">
 <meta property="og:locale" content="zh-CN">
 <meta name="twitter:card" content="summary">
@@ -152,232 +152,272 @@
           <div id="js-content" class="content-ll">
             
   
-  
+    <article id="post-隐式动画" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这其实就是所谓的<strong>隐式</strong>动画。之所以叫隐式是因为我们并没有指定任何动画的类型。我们仅仅改变了一个属性，然后Core Animation来决定如何并且何时去做动画。Core Animaiton同样支持<strong>显式</strong>动画，下章详细说明。</p>
+<p>但当你改变一个属性，Core Animation是如何判断动画类型和持续时间的呢？实际上动画执行的时间取决于当前<strong>事务</strong>的设置，动画类型取决于<strong>图层行为</strong>。</p>
+<p>事务实际上是Core Animation用来包含一系列属性动画集合的机制，任何用指定事务去改变可以做动画的图层属性都不会立刻发生变化，而是当事务一旦<strong>提交</strong>的时候开始用一个动画过渡到新值。</p>
+<p>事务是通过<code>CATransaction</code>类来做管理，这个类的设计有些奇怪，不像你从它的命名预期的那样去管理一个简单的事务，而是管理了一叠你不能访问的事务。<code>CATransaction</code>没有属性或者实例方法，并且也不能用<code>+alloc</code>和<code>-init</code>方法创建它。但是可以用<code>+begin</code>和<code>+commit</code>分别来入栈或者出栈。</p>
+<p>任何可以做动画的图层属性都会被添加到栈顶的事务，你可以通过<code>+setAnimationDuration:</code>方法设置当前事务的动画时间，或者通过<code>+animationDuration</code>方法来获取值（默认0.25秒）。</p>
+<p>Core Animation在每个<strong>run loop</strong>周期中自动开始一次新的事务（run loop是iOS负责收集用户输入，处理定时器或者网络事件并且重新绘制屏幕的东西），即使你不显式的用<code>[CATransaction begin]</code>开始一次事务，任何在一次run loop循环中属性的改变都会被集中起来，然后做一次0.25秒的动画。</p>
+<p>明白这些之后，我们就可以轻松修改变色动画的时间了。我们当然可以用当前事务的<code>+setAnimationDuration:</code>方法来修改动画时间，但在这里我们首先起一个新的事务，于是修改时间就不会有别的副作用。因为修改当前事务的时间可能会导致同一时刻别的动画（如屏幕旋转），所以最好还是在调整动画之前压入一个新的事务。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/11/06/python-error-list/" class="archive-article-date">
-  	<time datetime="2018-11-06T07:33:11.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-11-06</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
+      
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/09/13/隐式动画/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/11/06/iOS开发，Bluetooth/" class="archive-article-date">
-  	<time datetime="2018-11-06T05:36:14.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-11-06</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-iOS设置圆角的方法及指定圆角的位置" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="iOS设置圆角的方法及指定圆角的位置"><a href="#iOS设置圆角的方法及指定圆角的位置" class="headerlink" title="iOS设置圆角的方法及指定圆角的位置"></a>iOS设置圆角的方法及指定圆角的位置</h1><ul>
+<li>在iOS开发中，我们经常会遇到设置圆角的问题, 以下是几种设置圆角的方法:</li>
+</ul>
+<h3 id="第一种方法-通过设置layer的属性"><a href="#第一种方法-通过设置layer的属性" class="headerlink" title="第一种方法: 通过设置layer的属性"></a>第一种方法: 通过设置layer的属性</h3><h3 id="代码"><a href="#代码" class="headerlink" title="代码:"></a>代码:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">UIImageView *imageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@&quot;willwang&quot;]];</span><br><span class="line"></span><br><span class="line">//只需要设置layer层的两个属性</span><br><span class="line">//设置圆角</span><br><span class="line">imageView.layer.cornerRadius =50</span><br><span class="line"></span><br><span class="line">//将多余的部分切掉</span><br><span class="line">imageView.layer.masksToBounds = YES;</span><br><span class="line"></span><br><span class="line">[self.view addSubview:imageView];</span><br></pre></td></tr></table></figure>
+<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<ul>
+<li>这个实现方法里maskToBounds会触发离屏渲染(offscreen rendering)，GPU在当前屏幕缓冲区外新开辟一个渲染缓冲区进行工作，也就是离屏渲染，这会给我们带来额外的性能损耗，如果这样的圆角操作达到一定数量，会触发缓冲区的频繁合并和上下文的的频繁切换，性能的代价会宏观地表现在用户体验上&lt;掉帧&gt;不建议使用.</li>
+</ul>
+<h3 id="第二种方法-使用贝塞尔曲线UIBezierPath和Core-Graphics框架画出一个圆角"><a href="#第二种方法-使用贝塞尔曲线UIBezierPath和Core-Graphics框架画出一个圆角" class="headerlink" title="第二种方法: 使用贝塞尔曲线UIBezierPath和Core Graphics框架画出一个圆角"></a>第二种方法: 使用贝塞尔曲线UIBezierPath和Core Graphics框架画出一个圆角</h3><h3 id="效果图"><a href="#效果图" class="headerlink" title="效果图:"></a>效果图:</h3><p><img src="http://blog.cocoachina.com/uploads/attachments/595139/20170628/267cd0dd9efbd734e932702da7c1347f.jpg" alt=" 第二种.jpg "></p>
+<h3 id="代码-1"><a href="#代码-1" class="headerlink" title="代码:"></a>代码:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(100, 100, 100, 100)];</span><br><span class="line"></span><br><span class="line"> imageView.image = [UIImage imageNamed:@&quot;willwang&quot;];</span><br><span class="line"></span><br><span class="line">    //开始对imageView进行画图</span><br><span class="line">UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, NO, 0.0);</span><br><span class="line"></span><br><span class="line">    //使用贝塞尔曲线画出一个圆形图</span><br><span class="line">    [[UIBezierPath bezierPathWithRoundedRect:imageView.bounds cornerRadius:imageView.frame.size.width] addClip];</span><br><span class="line"></span><br><span class="line">    [imageView drawRect:imageView.bounds];</span><br><span class="line"></span><br><span class="line">    imageView.image = UIGraphicsGetImageFromCurrentImageContext();</span><br><span class="line"></span><br><span class="line">     //结束画图</span><br><span class="line">    UIGraphicsEndImageContext();</span><br><span class="line"></span><br><span class="line">    [self.view addSubview:imageView];</span><br></pre></td></tr></table></figure>
+<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<ul>
+<li>UIGraphicsBeginImageContextWithOptions(CGSize size, BOOL opaque, CGFloat scale) 各参数含义:</li>
+<li>size —— 新创建的位图上下文的大小</li>
+<li>opaque —— 透明开关，如果图形完全不用透明，设置为YES以优化位图的存储。</li>
+<li>scale —— 缩放因子 iPhone 4是2.0，其他是1.0。虽然这里可以用[UIScreen mainScreen].scale来获取，但实际上设为0后，系统就会自动设置正确的比例</li>
+</ul>
+<h3 id="第三种方法-使用Core-Graphics框架画出一个圆角"><a href="#第三种方法-使用Core-Graphics框架画出一个圆角" class="headerlink" title="第三种方法: 使用Core Graphics框架画出一个圆角"></a>第三种方法: 使用Core Graphics框架画出一个圆角</h3><h3 id="代码-2"><a href="#代码-2" class="headerlink" title="代码:"></a>代码:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(100, 200, 100, 100)];</span><br><span class="line"></span><br><span class="line">imageView.image = [UIImage imageNamed:@&quot;willwang&quot;];</span><br><span class="line"></span><br><span class="line">//开始对imageView进行画图</span><br><span class="line">UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, NO, 1.0);</span><br><span class="line"></span><br><span class="line">// 获得图形上下文</span><br><span class="line">CGContextRef ctx = UIGraphicsGetCurrentContext();</span><br><span class="line"></span><br><span class="line">// 设置一个范围</span><br><span class="line">CGRect rect = CGRectMake(0, 0, imageView.frame.size.width, imageView.frame.size.height);</span><br><span class="line"></span><br><span class="line">// 根据一个rect创建一个椭圆</span><br><span class="line">CGContextAddEllipseInRect(ctx, rect);</span><br><span class="line"></span><br><span class="line">// 裁剪</span><br><span class="line">CGContextClip(ctx);</span><br><span class="line"></span><br><span class="line">// 将原照片画到图形上下文</span><br><span class="line">[imageView.image drawInRect:rect];</span><br><span class="line"></span><br><span class="line">// 从上下文上获取剪裁后的照片</span><br><span class="line">UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();</span><br><span class="line"></span><br><span class="line">// 关闭上下文</span><br><span class="line">UIGraphicsEndImageContext();</span><br><span class="line"></span><br><span class="line">imageView.image = newImage;</span><br><span class="line"></span><br><span class="line">[self.view addSubview:imageView];</span><br></pre></td></tr></table></figure>
+<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<h3 id="第四种方法-使用CAShapeLayer和UIBezierPath设置圆角"><a href="#第四种方法-使用CAShapeLayer和UIBezierPath设置圆角" class="headerlink" title="第四种方法: 使用CAShapeLayer和UIBezierPath设置圆角"></a>第四种方法: 使用CAShapeLayer和UIBezierPath设置圆角</h3><h3 id="代码-3"><a href="#代码-3" class="headerlink" title="代码:"></a>代码:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(100, 100, 100, 100)];</span><br><span class="line"></span><br><span class="line">    imageView.image = [UIImage imageNamed:@&quot;willwang&quot;];</span><br><span class="line"></span><br><span class="line">    UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:imageView.bounds byRoundingCorners:UIRectCornerAllCorners cornerRadii:imageView.bounds.size];</span><br><span class="line"></span><br><span class="line">    CAShapeLayer *maskLayer = [[CAShapeLayer alloc]init];</span><br><span class="line"></span><br><span class="line">    //设置大小</span><br><span class="line">    maskLayer.frame = imageView.bounds;</span><br><span class="line"></span><br><span class="line">    //设置图形样子</span><br><span class="line">    maskLayer.path = maskPath.CGPath;</span><br><span class="line"></span><br><span class="line">    imageView.layer.mask = maskLayer;</span><br><span class="line"></span><br><span class="line">    [self.view addSubview:imageView];</span><br></pre></td></tr></table></figure>
+<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<h3 id="第四种方法延伸-指定需要成为圆角的角"><a href="#第四种方法延伸-指定需要成为圆角的角" class="headerlink" title="第四种方法延伸 指定需要成为圆角的角"></a>第四种方法延伸 指定需要成为圆角的角</h3><h3 id="方法"><a href="#方法" class="headerlink" title="方法:"></a>方法:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">+ (UIBezierPath *)bezierPathWithRoundedRect:(CGRect)rect</span><br><span class="line">                          byRoundingCorners:(UIRectCorner)corners</span><br><span class="line">                                cornerRadii:(CGSize)cornerRadii</span><br><span class="line">corners参数指定了要成为圆角的角, 枚举类型如下:</span><br><span class="line">typedef NS_OPTIONS(NSUInteger, UIRectCorner) &#123;</span><br><span class="line">    UIRectCornerTopLeft     = 1 &lt;&amp;lt; 0,</span><br><span class="line">    UIRectCornerTopRight    = 1 &lt;&amp;lt; 1,</span><br><span class="line">    UIRectCornerBottomLeft  = 1 &lt;&amp;lt; 2,</span><br><span class="line">    UIRectCornerBottomRight = 1 &lt;&amp;lt; 3,</span><br><span class="line">    UIRectCornerAllCorners  = ~0UL</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<h3 id="效果图-1"><a href="#效果图-1" class="headerlink" title="效果图:"></a>效果图:</h3><p><img src="http://blog.cocoachina.com/uploads/attachments/595139/20170628/351865f49589e750d202fc23979f144a.jpg" alt=" 14986372606268.jpg "></p>
+<h3 id="代码-4"><a href="#代码-4" class="headerlink" title="代码:"></a>代码:</h3><p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">//设置视图位置和大小</span><br><span class="line">    UIView *myView = [[UIView alloc] initWithFrame:CGRectMake(120, 300, 100, 50)];</span><br><span class="line"></span><br><span class="line">    //设置背景颜色</span><br><span class="line">    myView.backgroundColor = [UIColor redColor];</span><br><span class="line"></span><br><span class="line">    //添加</span><br><span class="line">    [self.view addSubview:myView];</span><br><span class="line"></span><br><span class="line">    //绘制圆角 要设置的圆角 使用“|”来组合</span><br><span class="line">    UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:myView.bounds byRoundingCorners:UIRectCornerTopLeft | UIRectCornerBottomRight cornerRadii:CGSizeMake(20, 20)];</span><br><span class="line"></span><br><span class="line">    CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];</span><br><span class="line"></span><br><span class="line">    //设置大小</span><br><span class="line">    maskLayer.frame = myView.bounds;</span><br><span class="line"></span><br><span class="line">    //设置图形样子</span><br><span class="line">    maskLayer.path = maskPath.CGPath;</span><br><span class="line"></span><br><span class="line">    myView.layer.mask = maskLayer;</span><br><span class="line"></span><br><span class="line">    UILabel *label = [[UILabel alloc]init];</span><br><span class="line"></span><br><span class="line">    //添加文字</span><br><span class="line">    label.text = @&quot;willwang&quot;;</span><br><span class="line"></span><br><span class="line">    //文字颜色</span><br><span class="line">    label.textColor = [UIColor whiteColor];</span><br><span class="line"></span><br><span class="line">    [myView addSubview: label];</span><br><span class="line"></span><br><span class="line">    //自动布局</span><br><span class="line">    [label mas_makeConstraints:^(MASConstraintMaker *make) &#123;</span><br><span class="line"></span><br><span class="line">        make.center.equalTo(myView);</span><br><span class="line">    &#125;];</span><br></pre></td></tr></table></figure>
+<p><a href="javascript:void(0" target="_blank" rel="noopener"><img src="https://common.cnblogs.com/images/copycode.gif" alt="复制代码"></a>;)</p>
+<h3 id="第五种方法-在storyboard或xib中设置"><a href="#第五种方法-在storyboard或xib中设置" class="headerlink" title="第五种方法 在storyboard或xib中设置"></a>第五种方法 在storyboard或xib中设置</h3><p><img src="http://blog.cocoachina.com/uploads/attachments/595139/20170628/fdba85417246ba90bbc49681265ffc1b.jpg" alt=" 14986398280102.jpg "></p>
+<p>少而好学，如日出之阳； 壮而好学，如日中之光； 老而好学，如炳烛之明。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/09/13/iOS设置圆角的方法及指定圆角的位置/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/10/25/适配iPhone XR:iPhone XS Max/" class="archive-article-date">
-  	<time datetime="2018-10-25T07:03:57.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-10-25</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-iOS实现3D旋转" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="iOS实现3D旋转"><a href="#iOS实现3D旋转" class="headerlink" title="iOS实现3D旋转"></a>iOS实现3D旋转</h1><p>转载    <a href="https://blog.csdn.net/u013749108/article/details/68951938" target="_blank" rel="noopener">https://blog.csdn.net/u013749108/article/details/68951938</a></p>
+<p>最近看到了一个3D旋转的动画，就想着自己去实现以下。那么，接下来就通过这边文章记录以下学习过程，慢慢深入了解以下3D旋转。</p>
+<p><strong>一、如何旋转</strong></p>
+<p>每个View都在系统的坐标系中，就手机屏幕来说，左上角为 (0 , 0)，向右横向的为X轴正方向，向下纵向的为Y轴正方向，垂直于手机屏幕的方向既Z轴方向。<br><img src="https://img-blog.csdn.net/20170402132030626?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMzc0OTEwOA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+<p>所以Z轴的旋转属于平面上的旋转，实现3D效果的前提就是有X轴或者Y轴的参与。</p>
+<p><strong>二、沿着Y轴旋转</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">先看一下CATransform3DMakeRotation的定义：</span><br><span class="line"></span><br><span class="line">CA_EXTERN CATransform3D CATransform3DMakeRotation (CGFloat angle, CGFloat x, CGFloat y, CGFloat z)</span><br><span class="line"></span><br><span class="line">angle：角度    x,y,z分别代表是三个方向的坐标12345</span><br></pre></td></tr></table></figure>
+<p>按照这个思路，于是我写下如下的代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">CATransform3D rotate = CATransform3DMakeRotation(M_PI/6, 0, 1, 0);</span><br><span class="line"></span><br><span class="line">self.imageView.layer.transform = rotate;</span><br><span class="line">1234</span><br></pre></td></tr></table></figure>
+<p>运行之后可以发现，imageView 并没有出现3D效果，只是单纯的在Y轴缩短了一些。为何会出现这样的效果？</p>
+<p>查资料后发现，原来在CALayer的显示系统中，默认使用的是正交投影，没有远小近大效果，所以我们对 imageView 的旋转操作，只能造成Y轴上的缩放。而无法观察到3D 的效果。</p>
+<p>其实这个时候 imageView 已经沿着Y轴旋转了 M_PI/6 ，但只是我们无法直接观察到这种效果。</p>
+<p><strong>三、添加3D效果</strong></p>
+<p>这时候我们需要用到透视投影。</p>
+<p>先看每个矩阵里数字代表的含义：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"> struct CATransform3D</span><br><span class="line"> &#123;</span><br><span class="line"></span><br><span class="line"> CGFloat m11（x缩放）, m12（y切变）, m13（旋转）, m14（）;</span><br><span class="line"></span><br><span class="line"> CGFloat m21（x切变）, m22（y缩放）, m23（）, m24（）;</span><br><span class="line"></span><br><span class="line"> CGFloat m31（旋转）, m32（）, m33（）, m34（透视效果）;</span><br><span class="line"></span><br><span class="line"> CGFloat m41（x平移）, m42（y平移）, m43（z平移）, m44（）;</span><br><span class="line"></span><br><span class="line"> &#125;;</span><br><span class="line"></span><br><span class="line">我们所需要的正是 m34 。</span><br><span class="line">123456789101112131415</span><br></pre></td></tr></table></figure>
+<p>构造一个旋转矩阵</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CATransform3D rotate = CATransform3DMakeRotation(M_PI/6, 0, 1, 0);1</span><br></pre></td></tr></table></figure>
+<p>构造一个透视矩阵</p>
+<p>其中：M34属性 控制透视效果</p>
+<p>正的值向下（左）方往里缩放 负的值上（右）方往里缩放</p>
+<p>disZ 控制透视的强度 数字越小 深度越大 拉伸效果越明显</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CGFloat disZ = 200;</span><br><span class="line"></span><br><span class="line">CATransform3D scale = CATransform3DIdentity;</span><br><span class="line"></span><br><span class="line">scale.m34 = -1.0f/disZ; 12345</span><br></pre></td></tr></table></figure>
+<p>然后把两个矩阵相乘 旋转矩阵*透视矩阵</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CATransform3D transform = CATransform3DConcat(rotate, scale);    1</span><br></pre></td></tr></table></figure>
+<p>把最后的结果赋给 imageView 的 layer 的 transform 。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">self.imageView.layer.transform = transform;1</span><br></pre></td></tr></table></figure>
+<p>运行起来，具有3D效果的一张图就展示在我们的眼前了，啧啧，是不是挺简单。</p>
+<p><strong>四、控制旋转中心轴</strong></p>
+<p>如果通过角度的递增，给我们的3D旋转加一个动画，我们就会明显的看到，默认的以平行于Y轴的 imageView 的中心轴进行旋转。那么如果让我们 imageView 以自己的左边线进行旋转呢？</p>
+<p>其实也很简单，旋转是以layer的锚点为中心进行旋转的。默认是 (0.5 , 0.5) 。我们只需要改变锚点的位置就好了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">image.layer.anchorPoint = CGPointMake(0, 0.5);</span><br></pre></td></tr></table></figure>
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/09/12/iOS实现3D旋转/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/10/19/揭秘 iOS 布局/" class="archive-article-date">
-  	<time datetime="2018-10-19T09:44:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-10-19</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="ios-core-animation-OC-Cube3D基于拖动手势的视图3D旋转效果"><a href="#ios-core-animation-OC-Cube3D基于拖动手势的视图3D旋转效果" class="headerlink" title="ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果"></a>ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果</h1><p>在网上看到有做html“程序员500行JavaScript开发拖拽3D盒子炫酷”，刚好最近在看《iOS核心动画高级技巧》，于是试着用OC实现一下 其中手势拖拽位置判断基于“iOS CoreAnimation专题——实战篇（四）基于拖动手势的视图3D旋转效果”：<a href="https://blog.csdn.net/u013282174/article/details/80311284" target="_blank" rel="noopener">https://blog.csdn.net/u013282174/article/details/80311284</a> （位置没有做仔细处理，有兴趣可以好好看下这篇文章研究下）</p>
+<p>地址：<a href="https://github.com/yuntiaoOS/ios_core_animation-OC-Cube3D" target="_blank" rel="noopener">https://github.com/yuntiaoOS/ios_core_animation-OC-Cube3D</a></p>
+<p><img src="https://ws3.sinaimg.cn/large/0069RVTdgy1fv6ubyroaig30do0ox1fw.gif" alt="image"></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/09/12/ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/27/Makefile/" class="archive-article-date">
-  	<time datetime="2018-09-27T06:39:45.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-27</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/26/使用ImageIO框架-立刻加载图片/" class="archive-article-date">
-  	<time datetime="2018-09-26T03:59:33.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-26</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
+        
+        
+    </div>
+</aside>
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/25/Swift 下用 lazy 让方法只被调用一次/" class="archive-article-date">
-  	<time datetime="2018-09-25T03:18:28.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-25</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/21/swift 防止按钮重复点击（时间等候模式:事件完成模式）/" class="archive-article-date">
-  	<time datetime="2018-09-21T10:22:23.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-21</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/21/swift4.0 Change:指针和swift变量/" class="archive-article-date">
-  	<time datetime="2018-09-21T10:12:37.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-21</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/14/iOS判断设备WiFi是否打开/" class="archive-article-date">
-  	<time datetime="2018-09-14T01:57:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-14</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
   
-    </div></section>
-  
-
-    
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/archives/page/2/">&laquo; Prev</a><a class="page-number" href="/archives/">1</a><a class="page-number" href="/archives/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/archives/page/4/">4</a><a class="extend next" rel="next" href="/archives/page/4/">Next &raquo;</a>
+      <a class="extend prev" rel="prev" href="/page/3/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span>
     </nav>
   
 
@@ -401,9 +441,9 @@
     <script>
 	var yiliaConfig = {
 		mathjax: false,
-		isHome: false,
+		isHome: true,
 		isPost: false,
-		isArchive: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

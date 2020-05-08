@@ -6,15 +6,21 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yuntiaoos.github.io/yuntianBLOG">
-  <title>Archives | yuntian&#39;s blog</title>
+  <title>yuntian&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
+  <meta name="description" content="[Swift]语法基础:swift中的for循环关于for循环,这里不做过多解释,大家都很熟悉,其在C语言中的使用格式是这样的: 1234for(int i = 0 ; i &amp;lt; 10; i++)&amp;#123;            // 你需要做的操作  &amp;#125; 这也就是标准的C-Type格式的for循环;另外,在OC中还有另外一个遍历集合的for-in循环,其格式是这样的: 1234f">
+<meta property="og:type" content="article">
 <meta property="og:title" content="yuntian&#39;s blog">
-<meta property="og:url" content="https://yuntiaoos.github.io/yuntianBLOG/archives/page/3/index.html">
+<meta property="og:url" content="https://yuntiaoos.github.io/yuntianBLOG/2019/11/07/[Swift]语法基础:swift中的for循环/index.html">
 <meta property="og:site_name" content="yuntian&#39;s blog">
+<meta property="og:description" content="[Swift]语法基础:swift中的for循环关于for循环,这里不做过多解释,大家都很熟悉,其在C语言中的使用格式是这样的: 1234for(int i = 0 ; i &amp;lt; 10; i++)&amp;#123;            // 你需要做的操作  &amp;#125; 这也就是标准的C-Type格式的for循环;另外,在OC中还有另外一个遍历集合的for-in循环,其格式是这样的: 1234f">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/1928848-89430a9b179cf3cd.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp">
+<meta property="og:updated_time" content="2019-11-07T03:39:37.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="yuntian&#39;s blog">
+<meta name="twitter:description" content="[Swift]语法基础:swift中的for循环关于for循环,这里不做过多解释,大家都很熟悉,其在C语言中的使用格式是这样的: 1234for(int i = 0 ; i &amp;lt; 10; i++)&amp;#123;            // 你需要做的操作  &amp;#125; 这也就是标准的C-Type格式的for循环;另外,在OC中还有另外一个遍历集合的for-in循环,其格式是这样的: 1234f">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/1928848-89430a9b179cf3cd.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp">
   
     <link rel="alternative" href="/atom.xml" title="yuntian&#39;s blog" type="application/atom+xml">
   
@@ -150,235 +156,183 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-[Swift]语法基础:swift中的for循环" class="article article-type-post " itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Swift-语法基础-swift中的for循环"><a href="#Swift-语法基础-swift中的for循环" class="headerlink" title="[Swift]语法基础:swift中的for循环"></a>[Swift]语法基础:swift中的for循环</h1><p>关于for循环,这里不做过多解释,大家都很熟悉,其在C语言中的使用格式是这样的:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span> ; i &lt; <span class="number">10</span>; i++)&#123;  </span><br><span class="line">      </span><br><span class="line">    <span class="comment">// 你需要做的操作  </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这也就是标准的C-Type格式的for循环;<br>另外,在OC中还有另外一个遍历集合的for-in循环,其格式是这样的:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (NSString *<span class="built_in">string</span> in <span class="built_in">array</span>) &#123;  </span><br><span class="line">          </span><br><span class="line">        NSLog(@<span class="string">"%@"</span>,<span class="built_in">string</span>);  </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>那么,在swift中的for循环又是怎样的呢?<br>在Swift中for循环变得更加强大灵活,写法上也有以上两种方式:</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> <span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i += <span class="number">1</span> &#123;  </span><br><span class="line">      </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">0.</span>.&lt;<span class="number">10</span> &#123;  </span><br><span class="line">      </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>只不过,in关键字后不但可以接一个集合类型,还可以跟一个区间类型;</p>
+<blockquote>
+<ul>
+<li>..&lt; 是不包含10的,</li>
+</ul>
+</blockquote>
+<ul>
+<li>… 是包含10的;</li>
+</ul>
+<p>但是,在最新的swift 3.0中,使用C-Type格式for循环时,Xcode会有警告:</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/1928848-89430a9b179cf3cd.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp" alt="img"></p>
+<p>提示我们改为for-in循环,这在大多数情况下是能满足需求的;<br>但是,for-in循环每次增加的步长是1,如果我们想每次循环加2怎么办呢?<br>这就用到了下面这个函数:</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// swift 2.0</span></span><br><span class="line">stride(to: &lt;Int&gt;, <span class="keyword">by</span>: &lt;Distance&gt;)  </span><br><span class="line"></span><br><span class="line"><span class="comment">//调用者: 就是索引的开始数字,例如:0;</span></span><br><span class="line"><span class="comment">//参数to: 就是最大数值,不包含此数值,例如:10;</span></span><br><span class="line"><span class="comment">//参数by: 就是步长,每次改变的大小</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 在swift 3.0 中,此方法改为</span></span><br><span class="line">stride(<span class="keyword">from</span>: &lt;T&gt;, to: &lt;T&gt;, <span class="keyword">by</span>: &lt;T.Stride&gt;)</span><br><span class="line"><span class="comment">// from: 起始数</span></span><br><span class="line"><span class="comment">// to: 最大数,不包含此数值</span></span><br><span class="line"><span class="comment">// by: 步长,每次改变的大小</span></span><br></pre></td></tr></table></figure>
+<p>这样,我们就可以写一个从0到10,每次增加2的for循环:</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//swif 2.0</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">0.</span>stride(to: <span class="number">10</span>, <span class="keyword">by</span>: <span class="number">2</span>) &#123;  </span><br><span class="line">      </span><br><span class="line">    <span class="comment">//  </span></span><br><span class="line">    print(i)  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"><span class="comment">// swift 3.0</span></span><br><span class="line"><span class="function"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="title">stride</span>(<span class="params"><span class="keyword">from</span>: <span class="number">0</span>, to: <span class="number">10</span> ,<span class="keyword">by</span>: <span class="number">2</span></span>)</span> &#123;</span><br><span class="line">    </span><br><span class="line">    print(i)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>控制台的输入是一样的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">0  </span><br><span class="line">2  </span><br><span class="line">4  </span><br><span class="line">6  </span><br><span class="line">8</span><br></pre></td></tr></table></figure>
+<p>这里的变量是包含0,不包含10,也就是前闭后开的集合;如果想包含后面的值,就需要修改一下stride函数的参数:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// swift 2.0</span></span><br><span class="line">stride(through: &lt;<span class="built_in">Int</span>&gt;, <span class="keyword">by</span>: &lt;<span class="built_in">Int</span>&gt;) </span><br><span class="line"><span class="comment">//swif 3.0</span></span><br><span class="line">stride(from: T, through: T, <span class="keyword">by</span>: T.Stride)</span><br></pre></td></tr></table></figure>
+<p>即:</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// swift 2.0</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">0.</span>stride(through: <span class="number">10</span>, <span class="keyword">by</span>: <span class="number">2</span>) &#123;  </span><br><span class="line">      </span><br><span class="line">    print(i)  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="comment">// swift 3.0</span></span><br><span class="line"><span class="function"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="title">stride</span>(<span class="params"><span class="keyword">from</span>: <span class="number">0</span>, through: <span class="number">10</span>, <span class="keyword">by</span>: <span class="number">2</span></span>)</span> &#123;</span><br><span class="line">    </span><br><span class="line">    print(i)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>控制台的输出,就包含了10:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">0  </span><br><span class="line">2  </span><br><span class="line">4  </span><br><span class="line">6  </span><br><span class="line">8  </span><br><span class="line">10</span><br></pre></td></tr></table></figure>
+<p>以上,都是从小到大递增的,能不能递减呢?<br>答案是可以的,只需要用最大的数值去调用stride方法,传入一个较小的结束参数,步长改为负数即可,例如:</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// swift 2.0</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">10.</span>stride(through: <span class="number">0</span>, <span class="keyword">by</span>: <span class="number">-2</span>) &#123;  </span><br><span class="line">      </span><br><span class="line">    print(i)  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"><span class="comment">// swift 3.0</span></span><br><span class="line"><span class="function"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="title">stride</span>(<span class="params"><span class="keyword">from</span>: <span class="number">10</span>, through: <span class="number">0</span>, <span class="keyword">by</span>: <span class="number">-2</span></span>)</span> &#123;</span><br><span class="line">    </span><br><span class="line">    print(i)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>控制台输出:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">10  </span><br><span class="line">8  </span><br><span class="line">6  </span><br><span class="line">4  </span><br><span class="line">2  </span><br><span class="line">0</span><br></pre></td></tr></table></figure>
+<p>对于步长是1的区间,递减运算还可以这样做:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 正常顺序</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1.</span>.&lt;<span class="number">10</span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">print</span>(i)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 递减输出</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> (<span class="number">1.</span>.&lt;<span class="number">10</span>).reversed() &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">print</span>(i)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/11/06/python-error-list/" class="archive-article-date">
-  	<time datetime="2018-11-06T07:33:11.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-11-06</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yuntiaoos.github.io/yuntianBLOG/2019/11/07/[Swift]语法基础:swift中的for循环/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/11/06/iOS开发，Bluetooth/" class="archive-article-date">
-  	<time datetime="2018-11-06T05:36:14.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-11-06</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/10/25/适配iPhone XR:iPhone XS Max/" class="archive-article-date">
-  	<time datetime="2018-10-25T07:03:57.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-10-25</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
+<nav id="article-nav">
+  
+    <a href="/2019/12/17/(推荐阅读)H264, H265硬件编解码基础及码流分析/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          (no title)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2018/12/20/ The Swift Programming Language--语言指南--高级运算符/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title"></div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/10/19/揭秘 iOS 布局/" class="archive-article-date">
-  	<time datetime="2018-10-19T09:44:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-10-19</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/27/Makefile/" class="archive-article-date">
-  	<time datetime="2018-09-27T06:39:45.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-27</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
+        
+        
+    </div>
+</aside>
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/26/使用ImageIO框架-立刻加载图片/" class="archive-article-date">
-  	<time datetime="2018-09-26T03:59:33.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-26</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/25/Swift 下用 lazy 让方法只被调用一次/" class="archive-article-date">
-  	<time datetime="2018-09-25T03:18:28.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-25</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/21/swift 防止按钮重复点击（时间等候模式:事件完成模式）/" class="archive-article-date">
-  	<time datetime="2018-09-21T10:22:23.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-21</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/21/swift4.0 Change:指针和swift变量/" class="archive-article-date">
-  	<time datetime="2018-09-21T10:12:37.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-21</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/09/14/iOS判断设备WiFi是否打开/" class="archive-article-date">
-  	<time datetime="2018-09-14T01:57:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-09-14</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
   
-    </div></section>
   
 
-    
-    <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/archives/page/2/">&laquo; Prev</a><a class="page-number" href="/archives/">1</a><a class="page-number" href="/archives/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/archives/page/4/">4</a><a class="extend next" rel="next" href="/archives/page/4/">Next &raquo;</a>
-    </nav>
+  
+
+  
+
   
 
 
@@ -402,8 +356,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
