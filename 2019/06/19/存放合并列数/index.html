@@ -6,15 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yuntiaoos.github.io/yuntianBLOG">
-  <title>Archives | yuntian&#39;s blog</title>
+  <title>yuntian&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
+  <meta name="description" content="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697989910010110210">
+<meta property="og:type" content="article">
 <meta property="og:title" content="yuntian&#39;s blog">
-<meta property="og:url" content="https://yuntiaoos.github.io/yuntianBLOG/archives/index.html">
+<meta property="og:url" content="https://yuntiaoos.github.io/yuntianBLOG/2019/06/19/存放合并列数/index.html">
 <meta property="og:site_name" content="yuntian&#39;s blog">
+<meta property="og:description" content="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697989910010110210">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-06-20T03:45:45.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="yuntian&#39;s blog">
+<meta name="twitter:description" content="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697989910010110210">
   
     <link rel="alternative" href="/atom.xml" title="yuntian&#39;s blog" type="application/atom+xml">
   
@@ -150,235 +154,149 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-存放合并列数" class="article article-type-post " itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"> var data = [&#123;path: &quot;sys/user&quot;, component: &apos;&apos;, name: &quot;用户管理&quot;, meta: &#123;icon: &quot;el-icon-service&quot;, index: 2&#125;&#125;,</span><br><span class="line">&#123;path: &quot;sys/dept&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/dept1&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/dept2&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/dept3&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/dept4&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/dept5&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/dep6t&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/dep7t&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/de8pt&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/de9pt&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/de0pt&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/d1ept&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/d2ept&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/d3ept&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/d4ept&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/d5ept&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/d6ept&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/d7ept&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/d8ept&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/d9ept&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">			 &#123;path: &quot;sys/d0ept&quot;, component: &apos;&apos;, name: &quot;机构管理&quot;, meta: &#123;icon: &quot;el-icon-news&quot;, index: 3&#125;&#125;,</span><br><span class="line">&#123;path: &quot;sys/role&quot;, component: &apos;&apos;, name: &quot;角色管理&quot;, meta: &#123;icon: &quot;el-icon-view&quot;, index: 4&#125;&#125;,</span><br><span class="line">&#123;path: &quot;sys/menu&quot;, component: &apos;&apos;, name: &quot;菜单管理&quot;, meta: &#123;icon: &quot;el-icon-menu&quot;, index: 5&#125;&#125;,</span><br><span class="line">&#123;path: &quot;8001/druid/login.html&quot;, component: &apos;&apos;, name: &quot;数据监控&quot;, meta: &#123;icon: &quot;el-icon-warning&quot;, index: 6&#125;&#125;];</span><br><span class="line">  </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> //console.log(sameStrHasFound([&quot;sys/user&quot;,&quot;sys/dept&quot;])) </span><br><span class="line"> </span><br><span class="line"> var sameIndexArray = [];</span><br><span class="line"> var sameStrAndCount = [];</span><br><span class="line"> data.sort();//注意，一定要排序，不排序，会重复判断，从而错误</span><br><span class="line"> for(var i = 0; i &lt; data.length;) &#123;//按照属性判断属性合并列数</span><br><span class="line">      var count = 0;</span><br><span class="line">	  var sameStr = &quot;&quot;;</span><br><span class="line">	  var sameIndexA = [];</span><br><span class="line">      for (var j = i; j &lt; data.length; j++) &#123;</span><br><span class="line">		  const isSameR = sameStrHasFound([data[i].path,data[j].path])</span><br><span class="line">		  //console.log(isSameR)</span><br><span class="line">           if(isSameR.isSame)&#123;</span><br><span class="line">                  count++;</span><br><span class="line">			   sameStr = isSameR.strSame</span><br><span class="line">			   sameIndexA.push(i)</span><br><span class="line">			   sameIndexA.push(j)</span><br><span class="line">			   //console.log(i)</span><br><span class="line">			   //console.log(j)</span><br><span class="line">           &#125;</span><br><span class="line">		  </span><br><span class="line">      &#125;</span><br><span class="line">	 sameIndexA = Array.from(new Set(sameIndexA))</span><br><span class="line">	 sameIndexArray.push(sameIndexA)</span><br><span class="line">       sameStrAndCount.push(&#123;</span><br><span class="line">             plName:sameStr,</span><br><span class="line">             count: count</span><br><span class="line">       &#125;)</span><br><span class="line">       i+=count;</span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line">// console.log(sameStrAndCount) </span><br><span class="line">//console.log(sameIndexArray)</span><br><span class="line"></span><br><span class="line">var router = &#123;</span><br><span class="line">               path: &apos;/otherInformation&apos;,</span><br><span class="line">               component: &apos;Layout&apos;,</span><br><span class="line">               redirect: &apos;/otherInformation/index&apos;,</span><br><span class="line">               name: &apos;OtherInformation&apos;,</span><br><span class="line">               meta: &#123; title: &apos;其他信息管理&apos;, icon: &apos;example&apos; &#125;,</span><br><span class="line">               children: [</span><br><span class="line">                 &#123;</span><br><span class="line">                   path: &apos;index&apos;,</span><br><span class="line">                   name: &apos;OtherInformation&apos;,</span><br><span class="line">                   component: () =&gt; import(&apos;@/views/otherInformation/index&apos;),</span><br><span class="line">                   meta: &#123; title: &apos;其他信息管理&apos;, icon: &apos;table&apos; &#125;</span><br><span class="line">                 &#125;</span><br><span class="line">               ]</span><br><span class="line">             &#125;;</span><br><span class="line"></span><br><span class="line">const tableD = sameIndexArray.forEach((element,i) =&gt; &#123;</span><br><span class="line">          var router = &#123;</span><br><span class="line">               path: &apos;/&apos; + element.plName,</span><br><span class="line">               component: &apos;Layout&apos;,</span><br><span class="line">               redirect: &apos;/&apos; +  data[element[0]].path,</span><br><span class="line">               name: titleCase2(element.plName),</span><br><span class="line">               meta: &#123; title: element.name, icon: element.meta.icon &#125;,</span><br><span class="line">               children: [</span><br><span class="line">                 </span><br><span class="line">               ]</span><br><span class="line">             &#125;;</span><br><span class="line">	console.log(router)</span><br><span class="line">          element.forEach((element1,j) =&gt; &#123;</span><br><span class="line">			let cRouter =  &#123;</span><br><span class="line">                   path: &apos;index&apos;,</span><br><span class="line">                   name: &apos;OtherInformation&apos;,</span><br><span class="line">                   component: () =&gt; import(&apos;@/views/otherInformation/index&apos;),</span><br><span class="line">                   meta: &#123; title: &apos;其他信息管理&apos;, icon: &apos;table&apos; &#125;</span><br><span class="line">                 &#125;</span><br><span class="line">          const resultKey = tHeader[i]</span><br><span class="line">          </span><br><span class="line">          dic[element1] = element[resultKey]</span><br><span class="line">         </span><br><span class="line">          return element</span><br><span class="line">        &#125;)</span><br><span class="line">        // this.list.unshift(dic)</span><br><span class="line">        return  dic</span><br><span class="line">      &#125;)</span><br><span class="line"></span><br><span class="line">	  </span><br><span class="line">//首字母大写	  </span><br><span class="line">function titleCase2(s) &#123;  </span><br><span class="line">	return s</span><br><span class="line">    //return s.toLowerCase().replace(/\b([\w|&apos;]+)\b/g, function(word) &#123;  </span><br><span class="line">    //    //return word.slice(0, 1).toUpperCase() + word.slice(1);  </span><br><span class="line">   //     return word.replace(word.charAt(0), word.charAt(0).toUpperCase());  </span><br><span class="line">   // &#125;);  </span><br><span class="line">	//ES6写法 </span><br><span class="line">	//return s.toLowerCase().replace(/( |^)[a-z]/g, (L) =&gt; L.toUpperCase());</span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line">function checkArrayFindSameStr(data) &#123;</span><br><span class="line">	var sameIndexArray = [];</span><br><span class="line"> var sameStrAndCount = [];</span><br><span class="line"> data.sort();//注意，一定要排序，不排序，会重复判断，从而错误</span><br><span class="line"> for(var i = 0; i &lt; data.length;) &#123;//按照属性判断属性合并列数</span><br><span class="line">      var count = 0;</span><br><span class="line">	  var sameStr = &quot;&quot;;</span><br><span class="line">	  var sameIndexA = [];</span><br><span class="line">      for (var j = i; j &lt; data.length; j++) &#123;</span><br><span class="line">		  const isSameR = sameStrHasFound([data[i].path,data[j].path])</span><br><span class="line">		  //console.log(isSameR)</span><br><span class="line">           if(isSameR.isSame)&#123;</span><br><span class="line">                  count++;</span><br><span class="line">			   sameStr = isSameR.strSame</span><br><span class="line">			   sameIndexA.push(i)</span><br><span class="line">			   sameIndexA.push(j)</span><br><span class="line">			   //console.log(i)</span><br><span class="line">			   //console.log(j)</span><br><span class="line">           &#125;</span><br><span class="line">		  </span><br><span class="line">      &#125;</span><br><span class="line">	 sameIndexA = Array.from(new Set(sameIndexA))</span><br><span class="line">	 sameIndexArray.push(sameIndexA)</span><br><span class="line">       sameStrAndCount.push(&#123;</span><br><span class="line">             plName:sameStr,</span><br><span class="line">             count: count</span><br><span class="line">       &#125;)</span><br><span class="line">       i+=count;</span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line"> console.log(sameStrAndCount) </span><br><span class="line">console.log(sameIndexArray)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">function sameStrHasFound(arr) &#123;</span><br><span class="line">  var result = &#123;isSame:false,strSame:&apos;&apos;&#125;</span><br><span class="line">  if (arr.length &lt;= 1) return false //小于2为false</span><br><span class="line">  //全部字符串连接起来</span><br><span class="line">  var allStr = arr.join(&apos;!(@*!!)#(*!)@*&apos;)</span><br><span class="line">  //第一个字符串用/来分隔，同时去除空字符串的情况，并循环各个目标字符串</span><br><span class="line">  arr[0].split(&apos;/&apos;).filter(str =&gt; &#123; return str != &apos;&apos; &#125;).forEach(str =&gt; &#123;</span><br><span class="line">    if (result.isSame) return result</span><br><span class="line">    //求目标字符串匹配个数</span><br><span class="line">    var match = allStr.match(new RegExp(str, &apos;gi&apos;))</span><br><span class="line">    //如果匹配个数是原数组长度则为true</span><br><span class="line">    if (match !== null &amp;&amp; match.length === arr.length) result = &#123;isSame:true,strSame:str&#125;</span><br><span class="line">  &#125;);</span><br><span class="line">  return result</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/12/26/[Jinkey 原创]震惊！iOS 系统居然自带悬浮窗口调试工具/" class="archive-article-date">
-  	<time datetime="2019-12-26T08:08:56.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-26</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yuntiaoos.github.io/yuntianBLOG/2019/06/19/存放合并列数/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/12/17/(强烈推荐)移动端音视频从零到上手/" class="archive-article-date">
-  	<time datetime="2019-12-17T06:21:59.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-17</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/12/17/(推荐阅读)H264, H265硬件编解码基础及码流分析/" class="archive-article-date">
-  	<time datetime="2019-12-17T06:00:23.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-17</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
+<nav id="article-nav">
+  
+    <a href="/2019/08/02/地图坐标显示/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          (no title)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/03/08/萃雅菁颜无痕系列套装/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title"></div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/07/[Swift]语法基础:swift中的for循环/" class="archive-article-date">
-  	<time datetime="2019-11-07T03:39:37.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-07</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/12/编写你的第一个 Django 应用/" class="archive-article-date">
-  	<time datetime="2019-09-12T11:29:32.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-12</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
+        
+        
+    </div>
+</aside>
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/08/02/地图坐标显示/" class="archive-article-date">
-  	<time datetime="2019-08-02T03:08:32.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-02</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/19/存放合并列数/" class="archive-article-date">
-  	<time datetime="2019-06-19T13:52:53.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-19</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/03/08/萃雅菁颜无痕系列套装/" class="archive-article-date">
-  	<time datetime="2019-03-08T03:47:33.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-08</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/01/16/大杀器Bodymovin和Lottie：把AE动画转换成HTML5:Android:iOS原生动画/" class="archive-article-date">
-  	<time datetime="2019-01-16T03:55:11.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-01-16</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/01/10/测试报告1.10-HQS/" class="archive-article-date">
-  	<time datetime="2019-01-10T10:50:08.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-01-10</time>
-</a>
-        </div>
-    	 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
   
-    </div></section>
   
 
-    
-    <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/archives/page/2/">2</a><a class="page-number" href="/archives/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/archives/page/5/">5</a><a class="extend next" rel="next" href="/archives/page/2/">Next &raquo;</a>
-    </nav>
+  
+
+  
+
   
 
 
@@ -402,8 +320,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

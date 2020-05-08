@@ -152,6 +152,905 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-揭秘 iOS 布局" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在你刚开始开发 iOS 应用时，最难避免或者是调试的就是和布局相关的问题。通常这种问题发生的原因就是对于 view 何时真正更新的错误理解。想理解 view 在何时是如何更新的，需要对 iOS RunLoop 和相关的 <code>UIView</code> 方法有深刻的理解。这篇文章会介绍这些关联，希望能帮你澄清如何用 <code>UIView</code> 的方法来获得正确的行为。</p>
+<h2 id="一个-iOS-应用的主-RunLoop"><a href="#一个-iOS-应用的主-RunLoop" class="headerlink" title="一个 iOS 应用的主 RunLoop"></a>一个 iOS 应用的主 RunLoop</h2><p>一个 iOS 应用的主 RunLoop 负责处理所有的用户输入事件并触发相应的响应。所有的用户交互都会被加入到一个事件队列中。下图中的 <code>Application</code> object 会从队列中取出事件并将它们分发到应用中的其他对象上。本质上它会解释这些来自用户的输入事件，然后调用在应用中的 Core objects 相应的处理代码，而这些代码再调用开发者写的代码。当这些方法调用返回后，控制流回到主 RunLoop 上，然后开始 <em>update cycle（更新周期）</em>。Update cycle 负责布局并且重新渲染视图们（接下来会讲到）。下面的图片展示了应用是如何和设备交互并且处理用户输入的。</p>
+<p><img src="https://nos.netease.com/cloud-website-bucket/2018091913500737f469c3-1b62-4c97-bdb6-132deae5fcb6.jpg" alt="img"></p>
+<p><em><a href="https://developer.apple.com/library/content/documentation/General/Conceptual/Devpedia-CocoaApp/MainEventLoop.html" target="_blank" rel="noopener">https://developer.apple.com/library/content/documentation/General/Conceptual/Devpedia-CocoaApp/MainEventLoop.html</a></em></p>
+<h2 id="Update-Cycle"><a href="#Update-Cycle" class="headerlink" title="Update Cycle"></a>Update Cycle</h2><p>Update cycle 是当应用完成了你的所有事件处理代码后控制流回到主 RunLoop 时的那个时间点。正是在这个时间点上系统开始更新布局、显示和设置约束。如果你在处理事件的代码中请求修改了一个 view，那么系统就会把这个 view 标记为需要重画（redraw）。在接下来的 Update cycle 中，系统就会执行这些 view 上的更改。用户交互和布局更新间的延迟几乎不会被用户察觉到。iOS 应用一般以 60 fps 的速度展示动画，就是说每个更新周期只需要 1/60 秒。这个更新的过程很快，所以用户在和应用交互时感觉不到 UI 中的更新延迟。但是由于在处理事件和对应 view 重画间存在着一个间隔，RunLoop 中的某时刻的 view 更新可能不是你想要的那样。如果你的代码中的某些计算依赖于当下的 view 内容或者是布局，那么就有在过时 view 信息上操作的风险。理解 RunLoop、update cycle 和 <code>UIView</code> 中具体的方法可以帮助避免或者可以调试这类问题。下面的图展示出了 update cycle 发生在 RunLoop 的尾部。</p>
+<p><img src="https://nos.netease.com/cloud-website-bucket/201809191350304d3569a5-6554-4e50-b076-ba025a462829.png" alt="img"></p>
+<p>## </p>
+<h2 id="布局"><a href="#布局" class="headerlink" title="布局"></a>布局</h2><p>一个视图的布局指的是它在屏幕上的的大小和位置。每个 view 都有一个 frame 属性，用来表示在父 view 坐标系中的位置和具体的大小。<code>UIView</code> 给你提供了用来通知系统某个 view 布局发生变化的方法，也提供了在 view 布局重新计算后调用的可重写的方法。</p>
+<p><strong>layoutSubviews()</strong></p>
+<p>这个 <code>UIView</code> 方法处理对视图（view）及其所有子视图（subview）的重新定位和大小调整。它负责给出当前 view 和每个子 view 的位置和大小。这个方法很开销很大，因为它会在每个子视图上起作用并且调用它们相应的 <code>layoutSubviews</code> 方法。系统会在任何它需要重新计算视图的 frame 的时候调用这个方法，所以你应该在需要更新 frame 来重新定位或更改大小时重载它。然而你不应该在代码中显式调用这个方法。相反，有许多可以在 run loop 的不同时间点触发 <code>layoutSubviews</code> 调用的机制，这些触发机制比直接调用 <code>layoutSubviews</code> 的资源消耗要小得多。</p>
+<p>当 <code>layoutSubviews</code> 完成后，在 view 的所有者 view controller 上，会触发 <code>viewDidLayoutSubviews</code> 调用。因为 <code>viewDidLayoutSubviews</code> 是 view 布局更新后会被唯一可靠调用的方法，所以你应该把所有依赖于布局或者大小的代码放在 <code>viewDidLayoutSubviews</code> 中，而不是放在 <code>viewDidLoad</code> 或者 <code>viewDidAppear</code> 中。这是避免使用过时的布局或者位置变量的唯一方法。</p>
+<p><strong>自动刷新触发器</strong></p>
+<p>有许多事件会自动给视图打上 “update layout” 标记，因此 <code>layoutSubviews</code> 会在下一个周期中被调用，而不需要开发者手动操作。这些自动通知系统 view 的布局发生变化的方式有：</p>
+<ul>
+<li><p>修改 view 的大小</p>
+</li>
+<li><p>新增 subview</p>
+</li>
+<li><p>用户在 <code>UIScrollView</code> 上滚动（<code>layoutSubviews</code> 会在 <code>UIScrollView</code> 和它的父 view 上被调用）</p>
+</li>
+<li><p>用户旋转设备</p>
+</li>
+<li><p>更新视图的 constraints</p>
+</li>
+<li><p>​</p>
+</li>
+</ul>
+<p>这些方式都会告知系统 view 的位置需要被重新计算，继而会自动转化为一个最终的 <code>layoutSubviews</code> 调用。当然，也有直接触发 <code>layoutSubviews</code> 的方法。</p>
+<p><strong>setNeedsLayout()</strong></p>
+<p>触发 <code>layoutSubviews</code> 调用的最省资源的方法就是在你的视图上调用 <code>setNeedsLaylout</code> 方法。调用这个方法代表向系统表示视图的布局需要重新计算。<code>setNeedsLayout</code> 方法会立刻执行并返回，但在返回前不会真正更新视图。视图会在下一个 update cycle 中更新，就在系统调用视图们的 <code>layoutSubviews</code> 以及他们的所有子视图的 <code>layoutSubviews</code> 方法的时候。即使从 <code>setNeedsLayout</code> 返回后到视图被重新绘制并布局之间有一段任意时间的间隔，但是这个延迟不会对用户造成影响，因为永远不会长到对界面造成卡顿。</p>
+<p><strong>layoutIfNeeded()</strong></p>
+<p><code>layoutIfNeeded</code> 是另一个会让 <code>UIView</code> 触发 <code>layoutSubviews</code> 的方法。 当视图需要更新的时候，与 <code>setNeedsLayout()</code> 会让视图在下一周期调用 <code>layoutSubviews</code> 更新视图不同，<code>layoutIfNeeded</code> 会立即调用 <code>layoutSubviews</code> 方法。但是如果你调用了 <code>layoutIfNeeded</code> 之后，并且没有任何操作向系统表明需要刷新视图，那么就不会调用 <code>layoutsubview</code>。如果你在同一个 run loop 内调用两次 <code>layoutIfNeeded</code>，并且两次之间没有更新视图，第二个调用同样不会触发 <code>layoutSubviews</code> 方法。</p>
+<p>使用 <code>layoutIfNeeded</code>，则布局和重绘会立即发生并在函数返回之前完成（除非有正在运行中的动画）。这个方法在你需要依赖新布局，无法等到下一次 update cycle 的时候会比 <code>setNeedsLayout</code> 有用。除非是这种情况，否则你更应该使用 <code>setNeedsLayout</code>，这样在每次 run loop 中都只会更新一次布局。</p>
+<p>当对希望通过修改 constraint 进行动画时，这个方法特别有用。你需要在 animation block 之前对 self.view 调用 <code>layoutIfNeeded</code>，以确保在动画开始之前传播所有的布局更新。在 animation block 中设置新 constrait 后，需要再次调用 <code>layoutIfNeeded</code> 来动画到新的状态。</p>
+<h2 id="显示"><a href="#显示" class="headerlink" title="显示"></a>显示</h2><p>一个视图的显示包含了颜色、文本、图片和 Core Graphics 绘制等视图属性，不包括其本身和子视图的大小和位置。和布局的方法类似，显示也有触发更新的方法，它们由系统在检测到更新时被自动调用，或者我们可以手动调用直接刷新。</p>
+<p><strong>draw(_:)</strong></p>
+<p><code>UIView</code> 的 <code>draw</code> 方法（本文使用 Swift，对应 Objective-C 的 <code>drawRect</code>）对视图内容显示的操作，类似于视图布局的 <code>layoutSubviews</code> ，但是不同于 <code>layoutSubviews</code>，<code>draw</code> 方法不会触发后续对视图的子视图方法的调用。同样，和 <code>layoutSubviews</code> 一样，你不应该直接调用 <code>draw</code> 方法，而应该通过调用触发方法，让系统在 run loop 中的不同结点自动调用。</p>
+<p><strong>setNeedsDisplay()</strong></p>
+<p>这个方法类似于布局中的 <code>setNeedsLayout</code> 。它会给有内容更新的视图设置一个内部的标记，但在视图重绘之前就会返回。然后在下一个 update cycle 中，系统会遍历所有已标标记的视图，并调用它们的 <code>draw</code> 方法。如果你只想在下次更新时重绘部分视图，你可以调用 <code>setNeedsDisplay(_:)</code>，并把需要重绘的矩形部分传进去（<code>setNeedsDisplayInRect</code> in OC)。大部分时候，在视图中更新任何 UI 组件都会把相应的视图标记为“dirty”，通过设置视图“内部更新标记”，在下一次 update cycle 中就会重绘，而不需要显式的 <code>setNeedsDisplay</code> 调用。然而如果你有一个属性没有绑定到 UI 组件，但需要在每次更新时重绘视图，你可以定义他的 <code>didSet</code> 属性，并且调用 <code>setNeedsDisplay</code> 来触发视图合适的更新。</p>
+<p>有时候设置一个属性要求自定义绘制，这种情况下你需要重写 <code>draw</code> 方法。在下面的例子中，设置 <code>numberOfPoints</code> 会触发系统系统根据具体点数绘制视图。在这个例子中，你需要在 <code>draw</code> 方法中实现自定义绘制，并在 <code>numberOfPoints</code> 的 property observer 里调用 <code>setNeedsDisplay</code>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">class MyView: UIView &#123;</span><br><span class="line">    var numberOfPoints = 0 &#123;</span><br><span class="line">        didSet &#123;</span><br><span class="line">            setNeedsDisplay()</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override func draw(_ rect: CGRect) &#123;</span><br><span class="line">        switch numberOfPoints &#123;</span><br><span class="line">        case 0:</span><br><span class="line">            return</span><br><span class="line">        case 1:</span><br><span class="line">            drawPoint(rect)</span><br><span class="line">        case 2:</span><br><span class="line">            drawLine(rect)</span><br><span class="line">        case 3:</span><br><span class="line">            drawTriangle(rect)</span><br><span class="line">        case 4:</span><br><span class="line">            drawRectangle(rect)</span><br><span class="line">        case 5:</span><br><span class="line">            drawPentagon(rect)</span><br><span class="line">        default:</span><br><span class="line">            drawEllipse(rect)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>视图的显示方法里没有类似布局中的 <code>layoutIfNeeded</code> 这样可以触发立即更新的方法。通常情况下等到下一个更新周期再重新绘制视图也无所谓。</p>
+<p>## </p>
+<h2 id="约束"><a href="#约束" class="headerlink" title="约束"></a>约束</h2><p>自动布局包含三步来布局和重绘视图。第一步是更新约束，系统会计算并给视图设置所有要求的约束。第二步是布局阶段，布局引擎计算视图和子视图的 frame 并且将它们布局。最后一步完成这一循环的是显示阶段，重绘视图的内容，如实现了 <code>draw</code> 方法则调用 <code>draw</code>。</p>
+<p><strong>updateConstraints()</strong></p>
+<p>这个方法用来在自动布局中动态改变视图约束。和布局中的 <code>layoutSubviews()</code> 方法或者显示中的 <code>draw</code> 方法类似，<code>updateConstraints()</code> 只应该被重载，绝不要在代码中显式地调用。通常你只应该在 <code>updateConstraints</code> 方法中实现必须要更新的约束。静态的约束应该在 interface builder、视图的初始化方法或者 <code>viewDidLoad()</code> 方法中指定。</p>
+<p>通常情况下，设置或者解除约束、更改约束的优先级或者常量值，或者从视图层级中移除一个视图时都会设置一个内部的标记 “update constarints”，这个标记会在下一个更新周期中触发调用 <code>updateConstrains</code>。当然，也有手动给视图打上“update constarints” 标记的方法，如下。</p>
+<p><strong>setNeedsUpdateConstraints()</strong></p>
+<p>调用 <code>setNeedsUpdateConstraints()</code> 会保证在下一次更新周期中更新约束。它通过标记“update constraints”来触发 <code>updateConstraints()</code>。这个方法和 <code>setNeedsDisplay()</code> 以及 <code>setNeedsLayout()</code> 方法的工作机制类似。</p>
+<p><strong>updateConstraintsIfNeeded()</strong></p>
+<p>对于使用自动布局的视图来说，这个方法与 <code>layoutIfNeeded</code> 等价。它会检查 “update constraints”标记（可以被 <code>setNeedsUpdateConstraints</code> 或者 <code>invalidateInstrinsicContentSize</code>方法自动设置）。如果它认为这些约束需要被更新，它会立即触发 <code>updateConstraints()</code> ，而不会等到 run loop 的末尾。</p>
+<p><strong>invalidateIntrinsicContentSize()</strong></p>
+<p>自动布局中某些视图拥有 <code>intrinsicContentSize</code> 属性，这是视图根据它的内容得到的自然尺寸。一个视图的 <code>intrinsicContentSize</code> 通常由所包含的元素的约束决定，但也可以通过重载提供自定义行为。调用 <code>invalidateIntrinsicContentSize()</code> 会设置一个标记表示这个视图的 <code>intrinsicContentSize</code> 已经过期，需要在下一个布局阶段重新计算。</p>
+<p>## </p>
+<h2 id="它们是如何连接起来的"><a href="#它们是如何连接起来的" class="headerlink" title="它们是如何连接起来的"></a>它们是如何连接起来的</h2><p>布局、显示和约束都遵循着相似的模式，例如他们更新的方式以及如何在 run loop 的不同时间点上强制更新。任一组件都有一个实际去更新的方法（<code>layoutSubviews</code>, <code>draw</code>, 和 <code>updateConstraints</code>），你可以重写来手动操作视图，但是任何情况下都不要显式调用。这个方法只在 run loop 的末端会被调用，如果视图被标记了告诉系统该视图需要被更新的标记的话。有一些操作会自动设置这个标志，但是也有一些方法允许您显式地设置它。对于布局和约束相关的更新，如果你等不到在 run loop 末端才更新（例如：其他行为依赖于新布局），有方法可以让你立即更新，并保证 “update layout” 标记被正确标记。下面的表格列出了任意组件会怎样更新及其对应方法。</p>
+<p><img src="https://nos.netease.com/cloud-website-bucket/201809191350518b3586dc-7fa6-40ef-807e-842c9612eee6.png" alt="img"><em>**</em></p>
+<p>下面的流程图总结了 update cycle 和 event loop 之间的交互，并指出了上文提到的方法在 run loop 运行期间的位置。你可以在 run loop 中的任意一点显式地调用 layoutIfNeeded 或者 updateConstraintsIfNeeded，需要记住，这开销会很大。在循环的末端是 update cycle，如果视图被设置了特定的 “update constraints”，“update layout” 或者 “needs display” 标记，在这节点会更新约束、布局以及展示。一旦这些更新结束，runloop 会重新启动。</p>
+<p><img src="https://nos.netease.com/cloud-website-bucket/20180919135102d2c48381-c7aa-4a02-9ec4-b1739323d12d.png" alt="img"><em>**</em></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/10/19/揭秘 iOS 布局/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-Makefile" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>Makefile</li>
+</ul>
+<p>值得一提的是，在Makefile中的命令，必须要以[Tab]键开始。</p>
+<p>​      什么是makefile？或许很多Winodws的程序员都不知道这个东西，因为那些Windows的IDE都为你做了这个工作，但我觉得要作一个好的和professional的程序员，makefile还是要懂。这就好像现在有这么多的HTML的编辑器，但如果你想成为一个专业人士，你还是要了解HTML的标识的含义。特别在Unix下的软件编译，你就不能不自己写makefile了，<strong>会不会写makefile，从一个侧面说明了一个人是否具备完成大型工程的能力</strong>。因为，makefile关系到了整个工程的编译规则。一个工程中的源文件不计数，其按<strong>类型、功能、模块</strong>分别放在若干个目录中，makefile定义了一系列的规则来指定，哪些文件需要先编译，哪些文件需要后编译，哪些文件需要重新编译，甚至于进行更复杂的功能操作，因为makefile就像一个Shell脚本一样，其中也可以执行<a href="http://lib.csdn.net/base/operatingsystem" target="_blank" rel="noopener"><strong>操作系统</strong></a>的命令。makefile带来的好处就是——“自动化编译”，一旦写好，只需要一个make命令，整个工程完全<strong>自动编译</strong>，极大的提高了软件开发的效率。make是一个命令工具，是一个解释makefile中指令的命令工具，一般来说，大多数的IDE都有这个命令，比如：<strong>Delphi</strong>的<strong>make</strong>，<strong>Visual C++</strong>的<strong>nmake</strong>，<a href="http://lib.csdn.net/base/linux" target="_blank" rel="noopener"><strong>Linux</strong></a>下GNU的make。可见，makefile都成为了一种在工程方面的编译方法。</p>
+<p>​    在这篇文档中，将以C/C++的源码作为我们基础，所以必然涉及一些关于C/C++的编译的知识，相关于这方面的内容，还请各位查看相关的编译器的文档。这里所默认的编译器是UNIX下的GCC和CC。</p>
+<p><strong>1 关于程序的编译和链接</strong></p>
+<p>   在此，我想多说关于程序编译的一些规范和方法，一般来说，无论是C、C++、还是pas，首先要把源文件编译成<strong>中间代码文件</strong>，在<strong>Windows</strong>下也就是<strong>.obj</strong>文件，<strong>UNIX</strong>下是<strong>.o</strong>文件，即<strong>Object File</strong>，这个动作叫做<strong>编译（compile）</strong>。然后再把大量的<strong>Object File合成执行文件</strong>，这个动作叫作<strong>链接</strong>（link）。   </p>
+<p>​    <strong>编译时</strong>，编译器需要的是<strong>语法</strong>的正确，<strong>函数与变量</strong>的<strong>声明</strong>的<strong>正确</strong>。对于后者，通常是你需要告诉编译器头文件的所在位置（头文件中应该只是声明，而定义应该放在C/C++文件中），只要所有的语法正确，编译器就可以编译出中间目标文件。一般来说，每个源文件都应该对应于一个中间<strong>目标文件</strong>（O文件或是OBJ文件）。<br>​    <strong>链接时</strong>，主要是<strong>链接函数和全局变量</strong>，所以，我们可以使用这些中间目标文件（O文件或是OBJ文件）来链接我们的应用程序。<strong>链接器并不管函数所在的源文件，只管函数的中间目标文件（Object<br> File）</strong>，在大多数时候，由于源文件太多，编译生成的中间目标文件太多，<strong>而在链接时需要明显地指出中间目标文件名</strong>，这对于编译很不方便，所以，我们要给<strong>中间目标文件打个包</strong>，在Windows下这种包叫“<strong>库文件”（LibraryFile)</strong>，也就是<strong><br> .lib</strong>文件，在UNIX下，是<strong>Archive File</strong>，也就是<strong> .a</strong>文件。</p>
+<p>​     总结一下，源文件首先会生成中间目标文件，再由中间目标文件生成执行文件。在编译时，编译器只检测程序语法，和函数、变量是否被声明。如果函数未被声明，编译器会给出一个警告，但可以生成Object File。而在链接程序时，链接器会在所有的Object File中找寻函数的实现，如果找不到，那到就会报链接错误码（Linker Error），在VC下，这种错误一般是：Link<br> 2001错误，意思说是说，链接器未能找到函数的实现。你需要指定函数的ObjectFile.<br>​    好，言归正传，GNU的make有许多的内容，闲言少叙，还是让我们开始吧。</p>
+<p><strong>1 Makefile 介绍</strong></p>
+<p>​      make命令执行时，需要一个 Makefile文件，以告诉make命令需要怎么样的去编译和链接程序。</p>
+<p>​      首先，我们用一个示例来说明Makefile的书写规则。以便给大家一个感兴认识。这个示例来源于GNU的make使用手册，在这个示例中，我们的工程有8个C文件，和3个头文件，我们要写一个Makefile来告诉make命令如何编译和链接这几个文件。我们的规则是：<br>​       1.如果这个工程没有编译过，那么我们的所有C文件都要编译并被链接。</p>
+<p>​        2.如果这个工程的某几个C文件被修改，那么我们只编译被修改的C文件，并链接目标程序。</p>
+<p>​        3.如果这个工程的头文件被改变了，那么我们需要编译引用了这几个头文件的C文件，并链接目标程序。</p>
+<p>​     只要我们的Makefile写得够好，所有的这一切，我们只用一个make命令就可以完成，make命令会自动智能地根据当前的文件修改的情况来确定哪些文件需要重编译，从而自己编译所需要的文件和链接目标程序。</p>
+<p><strong>1.1 Makefile的规则</strong></p>
+<p>   在讲述这个Makefile之前，还是让我们先来粗略地看一看Makefile的规则。</p>
+<p>​         <strong> target…:prerequisites …(预备知识，先决条件)</strong></p>
+<p><strong>         command（指令）</strong></p>
+<p><strong>         …</strong></p>
+<p><strong>         …<br>​        ——————————————————————————-</strong></p>
+<p>​      <strong> target</strong>也就是一个目标文件，可以是<strong>Object File</strong>，也可以是执行文件。还可以是一个标签（Label），对于标签这种特性，在后续的“伪目标”章节中会有叙述。</p>
+<p><strong>      prerequisites</strong>就是，要生成那个target所需要的文件或是目标。</p>
+<p><strong>      command</strong>也就是make需要执行的命令。（任意的Shell命令）</p>
+<p>​       这是一个文件的依赖关系，也就是说，target这一个或多个的目标文件依赖于prerequisites中的文件，其生成规则定义在command中。说白一点就是说，prerequisites中如果有一个以上的文件比target文件要新的话，command所定义的命令就会被执行。这就是Makefile的规则。也就是Makefile中最核心的内容。</p>
+<p>​       说到底，Makefile的东西就是这样一点，好像我的这篇文档也该结束了。呵呵。还不尽然，这是Makefile的主线和核心，但要写好一个Makefile还不够，我会以后面一点一点地结合我的工作经验给你慢慢到来。内容还多着呢。）</p>
+<p><strong>1.2 一个示例</strong></p>
+<p>正如前面所说的，如果一个工程有3个头文件，和8个C文件，我们为了完成前面所述的那三个规则，我们的Makefile应该是下面的这个样子的。</p>
+<p>   edit : main.o kbd.o command.o display.o  insert.osearch.o files.o utils.o</p>
+<p>​           cc-o edit main.o kbd.o command.o display.o  insert.o search.o files.outils.o</p>
+<p>   main.o : main.c defs.h</p>
+<p>​           cc-c main.c</p>
+<p>   kbd.o : kbd.c defs.hcommand.h</p>
+<p>​           cc-c kbd.c</p>
+<p>   command.o : command.cdefs.h command.h</p>
+<p>​           cc-c command.c</p>
+<p>   display.o : display.cdefs.h buffer.h</p>
+<p>​           cc-c display.c</p>
+<p>   insert.o : insert.cdefs.h buffer.h</p>
+<p>​           cc-c insert.c</p>
+<p>   search.o : search.cdefs.h buffer.h</p>
+<p>​           cc-c search.c</p>
+<p>   files.o : files.c defs.hbuffer.h command.h</p>
+<p>​           cc-c files.c</p>
+<p>   utils.o : utils.c defs.h</p>
+<p>​           cc-c utils.c</p>
+<p>   clean :</p>
+<p>​           rmedit main.o kbd.o command.o display.o insert.o search.o files.o utils.o</p>
+<p>​      <strong> **</strong>反斜杠（\）<strong>是换行符的意思。这样比较便于Makefile的易读。我们可以把这个内容保存在文件为“Makefile”或“makefile”的文件中，然后在该目录下直接输入命令“make”就可以生成执行文件edit。</strong>如果要删除执行文件和所有的中间目标文件，那么，只要简单地执行一下“make clean”就可以了**。</p>
+<p>​        在这个makefile中，目标文件（target）包含：执行文件edit和中间目标文件（*.o），依赖文件（prerequisites）就是冒号后面的那些 .c 文件和 .h文件。每一个 .o 文件都有一组依赖文件，而这些 .o 文件又是执行文件 edit 的依赖文件。依赖关系的实质上就是说明了目标文件是由哪些文件生成的，换言之，目标文件是哪些文件更新的。</p>
+<p>​        在定义好<strong>依赖关系</strong>后，后续的那一行定义了如何生成目标文件的<strong>操作系统命令，一定要以一个Tab键作为开头。记住，make并不管命令是怎么工作的，他只管执行所定义的命令</strong>。make会比较targets文件和prerequisites文件的修改日期，<strong>如果prerequisites文件的日期要比targets文件的日期要新，或者target不存在的话，那么，make就会执行后续定义的命令。</strong></p>
+<p>​      这里要说明一点的是，clean不是一个文件，它只不过是一个动作名字，有点像<a href="http://lib.csdn.net/base/c" target="_blank" rel="noopener"><strong>C语言</strong></a>中的lable一样，其冒号后什么也没有，那么，make就不会自动去找文件的依赖性，也就不会自动执行其后所定义的命令。要执行其后的命令，就要在make命令后明显得指出这个lable的名字。这样的方法非常有用，我们可以在一个makefile中定义不用的编译或是和编译无关的命令，比如程序的打包，程序的备份，等等。</p>
+<p><strong>1.3 make是如何工作的</strong></p>
+<p>在默认的方式下，也就是我们只输入make命令。那么，</p>
+<ol>
+<li>make会在当前目录下找名字叫“Makefile”或“makefile”的文件。</li>
+<li>如果找到，它会找文件中的第一个目标文件（target），在上面的例子中，他会找到“edit”这个文件，并把这个文件作为最终的目标文件。</li>
+<li>如果edit文件不存在，或是edit所依赖的后面的 .o 文件的文件修改时间要比edit这个文件新，那么，他就会执行后面所定义的命令来生成edit这个文件。</li>
+<li>如果edit所依赖的.o文件也存在，那么make会在当前文件中找目标为.o文件的依赖性，如果找到则再根据那一个规则生成.o文件。（这有点像一个堆栈的过程）</li>
+<li>当然，你的C文件和H文件是存在的啦，于是make会生成 .o 文件，然后再用 .o 文件声明make的终极任务，也就是执行文件edit了。</li>
+</ol>
+<p>​    这就是整个make的依赖性，make会一层又一层地去找文件的依赖关系，直到最终编译出第一个目标文件。<strong>在找寻的过程中，如果出现错误，比如最后被依赖的文件找不到，那么make就会直接退出，并报错</strong>，<strong>而对于所定义的命令的错误，或是编译不成功，make根本不理。make只管文件的依赖性，即，如果在我找了依赖关系之后，冒号后面的文件还是不在，那么对不起，我就不工作啦。</strong></p>
+<p>​     通过上述分析，我们知道，像clean这种，没有被第一个目标文件直接或间接关联，那么它后面所定义的命令将不会被自动执行，不过，我们可以显示要make执行。即命令——<strong>“make clean”，以此来清除所有的目标文件，以便重编译</strong>。</p>
+<p>​     于是在我们编程中，如果这个工程已被编译过了，当我们修改了其中一个源文件，比如file.c，那么根据我们的依赖性，我们的目标file.o会被重编译（也就是在这个依性关系后面所定义的命令），于是file.o的文件也是最新的啦，于是file.o的文件修改时间要比edit要新，所以edit也会被重新链接了（详见edit目标文件后定义的命令）。而如果我们改变了“command.h”，那么，kdb.o、command.o和files.o都会被重编译，并且，edit会被重链接。</p>
+<p><strong>1.4 makefile中使用变量</strong></p>
+<p>在上面的例子中，先让我们看看edit的规则：</p>
+<p>​     edit : main.okbd.o command.o display.o insert.o search.o files.o utils.o</p>
+<p>​     cc -o edit main.okbd.o command.o display.o insert.o search.o files.o utils.o</p>
+<p>​    我们可以看到[.o]文件的字符串被重复了两次，如果我们的工程需要加入一个新的[.o]文件，那么我们需要在两个地方加（应该是三个地方，还有一个地方在clean中）。当然，我们的makefile并不复杂，所以在两个地方加也不累，但如果makefile变得复杂，那么我们就有可能会忘掉一个需要加入的地方，而导致编译失败。所以，<strong>为了makefile的易维护，在makefile中我们可以使用变量。makefile的变量也就是一个字符串</strong>，理解成C语言中的宏可能会更好。比如，我们声明一个变量，叫objects,OBJECTS, objs, OBJS, obj, 或是 OBJ，反正不管什么啦，只要能够表示obj文件就行了。我们在makefile一开始就这样定义：</p>
+<p>​    objects = main.okbd.o command.o display.o insert.o search.o files.o utils.o</p>
+<p>于是，我们就可以很方便地在我们的makefile中以<strong>“$(objects)”</strong>的方式来使用这个变量了，于是我们的改良版makefile就变成下面这个样子：</p>
+<p>   objects= main.o kbd.o command.o display.o insert.osearch.o files.o utils.o </p>
+<p>   edit: $(objects)</p>
+<p>​           cc-o edit $(objects)</p>
+<p>   main.o: main.c defs.h</p>
+<p>​           cc-c main.c</p>
+<p>   kbd.o: kbd.c defs.h command.h</p>
+<p>​           cc-c kbd.c</p>
+<p>   command.o: command.c defs.h command.h</p>
+<p>​           cc-c command.c</p>
+<p>   display.o: display.c defs.h buffer.h</p>
+<p>​           cc-c display.c</p>
+<p>   insert.o: insert.c defs.h buffer.h</p>
+<p>​           cc-c insert.c</p>
+<p>   search.o: search.c defs.h buffer.h</p>
+<p>​           cc-c search.c</p>
+<p>   files.o: files.c defs.h buffer.h command.h</p>
+<p>​           cc-c files.c</p>
+<p>   utils.o: utils.c defs.h</p>
+<p>​           cc-c utils.c</p>
+<p>   clean:</p>
+<p>​           rmedit $(objects)</p>
+<p>于是如果有新的 .o 文件加入，我们只需简单地修改一下objects 变量就可以了。</p>
+<p>关于变量更多的话题，我会在后续给你一一道来。</p>
+<p><strong>1.5 让make自动推导</strong></p>
+<p>GNU的make很强大，<strong>它可以自动推导文件以及文件依赖关系后面的命令</strong>，于是我们就没必要去在每一个[.o]文件后都写上类似的命令，因为，我们的make会自动识别，并自己推导命令。<strong>只要make看到一个[.o]文件，它就会自动的把[.c]文件加在依赖关系中，如果make找到一个whatever.o，那么whatever.c，就会是whatever.o的依赖文件。并且 cc -c whatever.c 也会被推导出来，于是，我们的makefile再也不用写得这么复杂</strong>。我们的是新的makefile又出炉了。</p>
+<p>   objects= main.o kbd.o command.o display.o insert.o search.o files.o utils.o</p>
+<p>  edit :$(objects)</p>
+<p>​           cc-o edit $(objects)</p>
+<p>   main.o: defs.h</p>
+<p>   kbd.o: defs.h command.h</p>
+<p>   command.o: defs.h command.h</p>
+<p>   display.o: defs.h buffer.h</p>
+<p>   insert.o: defs.h buffer.h</p>
+<p>   search.o: defs.h buffer.h</p>
+<p>   files.o: defs.h buffer.h command.h</p>
+<p>   utils.o: defs.h</p>
+<p>​    .PHONY: clean</p>
+<p>   clean:</p>
+<p>​           rmedit $(objects)</p>
+<p>这种方法，也就是make的“<strong>隐晦规则</strong>”。上面文件内容中，“.PHONY”表示，clean是个伪目标文件。</p>
+<p>关于更为详细的“<strong>隐晦规则</strong>”和“<strong>伪目标文件</strong>”，我会在后续给你一一道来。</p>
+<p><strong>1.6 另类风格的makefile</strong></p>
+<p>​    即然我们的make可以自动推导命令，那么我看到那堆[.o]和[.h]的依赖就有点不爽，那么多的重复的[.h]，能不能把其收拢起来，好吧，没有问题，这个对于make来说很容易，谁叫它提供了自动推导命令和文件的功能呢？来看看最新风格的makefile吧。</p>
+<p>   objects= main.o kbd.o command.o display.o  insert.o search.o files.o utils.o</p>
+<p>​    edit: $(objects)</p>
+<p>​           cc-o edit $(objects)</p>
+<p>​    $(objects): defs.h</p>
+<p>   kbd.ocommand.o files.o : command.h</p>
+<p>   display.oinsert.o search.o files.o : buffer.h</p>
+<p>​    .PHONY : clean  //“.PHONY”表示，clean是个伪目标文件</p>
+<p>   clean:</p>
+<p>​           rmedit $(objects)</p>
+<p>这种风格，让我们的makefile变得很简单，但我们的文件依赖关系就显得有点凌乱了。鱼和熊掌不可兼得。还看你的喜好了。我是不喜欢这种风格的，一是文件的依赖关系看不清楚，二是如果文件一多，要加入几个新的.o文件，那就理不清楚了。</p>
+<p><strong>1.7 清空目标文件的规则</strong></p>
+<p>​     每个Makefile中都应该写一个清空目标文件（.o和执行文件）的规则，这不仅便于重编译，也很利于保持文件的清洁。这是一个“<strong>修养</strong>”（呵呵，还记得我的《编程修养》吗）。一般的风格都是：</p>
+<p>​       clean:</p>
+<p>​           rmedit $(objects)</p>
+<p>更为稳健的做法是：</p>
+<p>​       .PHONY : clean</p>
+<p>​       clean:</p>
+<p>​               -rmedit $(objects)</p>
+<p>前面说过，<strong>.PHONY意思表示clean是一个“伪目标”</strong>。而在rm命令前面加了一个小减号的意思就是，也许某些文件出现问题，但不要管，继续做后面的事。当然，clean的规则不要放在文件的开头，不然，这就会变成make的默认目标，相信谁也不愿意这样。不成文的规矩是——“clean从来都是放在文件的最后”。</p>
+<p>上面就是一个makefile的概貌，也是makefile的基础，下面还有很多makefile的相关细节，准备好了吗？准备好了就来。</p>
+<p><strong>2 Makefile 总述</strong></p>
+<p><strong>2.1 Makefile里有什么？</strong></p>
+<p>Makefile里主要包含了<strong>五个东西：显式规则、隐晦规则、变量定义、文件指示和注释。</strong></p>
+<ol>
+<li><p>显式规则。显式规则说明了，如何生成一个或多的的目标文件。这是由Makefile的书写者明显指出，要生成的文件，文件的依赖文件，生成的命令。</p>
+</li>
+<li><p>隐晦规则。由于我们的make有<strong>自动推导</strong>的功能，所以隐晦的规则可以让我们比较<strong>粗糙地简略地书写</strong>Makefile，这是由make所支持的。</p>
+</li>
+<li><p>变量的定义。在Makefile中我们要定义一系列的变量，<strong>变量一般都是字符串，这个有点你C语言中的宏</strong>，当Makefile被执行时，其中的变量都会被扩展到相应的引用位置上。</p>
+</li>
+<li><p>文件指示。其包括了三个部分，<strong>一个是在一个Makefile</strong>中引用另一个Makefile，就像C语言中的include一样；<strong>另一个是指根据某些情况指定Makefile中的有效部分，就像C语言中的预编译#if一样</strong>；还有就是定义一个多行的命令。有关这一部分的内容，我会在后续的部分中讲述。</p>
+</li>
+<li><p>注释。Makefile中只有行注释，和<strong>UNIX的Shell脚本一样</strong>，其注释是用“<strong>#</strong>”字符，这个就像C/C++中的“//”一样。如果你要在你的Makefile中使用“<strong>#</strong>”字符，可以用反斜框进行转义，如：“#”。</p>
+</li>
+</ol>
+<p>最后，还值得一提的是，在Makefile中的命令，必须要以[Tab]键开始。</p>
+<p><strong>2.2Makefile的文件名</strong></p>
+<p>​        默认的情况下，make命令会在当前目录下按顺序找寻文件名为<strong>“GNUmakefile”、“makefile”、“Makefile”</strong>的文件，找到了解释这个文件。在这三个文件名中，最好使用“Makefile”这个文件名，因为，这个文件名第一个字符为大写，这样有一种显目的感觉。最好不要用“GNUmakefile”，这个文件是GNU的make识别的。有另外一些make只对全小写的“makefile”文件名敏感，但是基本上来说，大多数的make都支持“<strong>makefile”和“Makefile”</strong>这两种默认文件名。</p>
+<p>​     当然，你可以使用别的文件名来书写Makefile，比如：“Make.Linux”，“Make.Solaris”，“Make.AIX”等，如果要<strong>指定特定的Makefile，你可以使用make的“-f”和“–file”参数</strong>，如：make -f Make.Linux或make –file Make.AIX。</p>
+<p><strong>2.3 引用其它的Makefile</strong></p>
+<p>​    在Makefile使用include关键字可以把别的Makefile包含进来，这很像C语言的#include，被包含的文件会原模原样的放在当前文件的包含位置。include的语法是：</p>
+<p><strong>include<filename></filename></strong>filename可以是当前操作系统Shell的文件模式（可以保含路径和通配符）</p>
+<p><strong>在include前面可以有一些空字符，但是绝不能是[Tab]键开始。include和可以用一个或多个空格隔开。</strong>举个例子，你有这样几个Makefile：a.mk、b.mk、c.mk，还有一个文件叫foo.make，以及一个变量$(bar)，其包含了e.mk和f.mk，那么，下面的语句：</p>
+<p>   include foo.make *.mk$(bar)</p>
+<p>等价于：</p>
+<p>   include foo.make a.mkb.mk c.mk e.mk f.mk</p>
+<p>make命令开始时，会把找寻include所指出的其它Makefile，并把其内容安置在当前的位置。就好像C/C++的#include指令一样。如果文件都没有指定绝对路径或是相对路径的话，make会在当前目录下首先寻找，如果当前目录下没有找到，那么，make还会在下面的几个目录下找：</p>
+<p>1.如果make执行时，有“-I”或“–include-dir”参数，那么make就会在这个参数所指定的目录下去寻找。</p>
+<p>2.如果目录/include（一般是：/usr/local/bin或/usr/include）存在的话，make也会去找。</p>
+<p>​     如果有文件没有找到的话，make会生成一条警告信息，但不会马上出现致命错误。它会继续载入其它的文件，一旦完成makefile的读取，make会再重试这些没有找到，或是不能读取的文件，如果还是不行，make才会出现一条致命信息。如果你想让make不理那些无法读取的文件，而继续执行，你可以在include前加一个减号“-”。如：</p>
+<p>-include<filename></filename></p>
+<p>其表示，无论include过程中出现什么错误，都不要报错继续执行。和其它版本make兼容的相关命令是sinclude，其作用和这一个是一样的。</p>
+<p><strong>2.4 环境变量 MAKEFILES</strong></p>
+<p>如果你的当前环境中定义了环境变量MAKEFILES，那么，make会把这个变量中的值做一个类似于include的动作。这个变量中的值是其它的Makefile，用空格分隔。只是，它和include不同的是，从这个环境变中引入的Makefile的“目标”不会起作用，<strong>如果环境变量中定义的文件发现错误，make也会不理</strong>。</p>
+<p><strong>但是在这</strong>里我还是建议不要使用这个环境变量，因为只要这个变量一被定义，那么当你使用make时，所有的Makefile都会受到它的影响，这绝不是你想看到的。在这里提这个事，只是为了告诉大家，也许有时候你的Makefile出现了怪事，那么你可以看看当前环境中有没有定义这个变量。</p>
+<p><strong>2.5 make的工作方式</strong></p>
+<p><strong>GNU的make工作时的执行步骤入下：（想来其它的make也是类似）</strong></p>
+<ol>
+<li><p>读入所有的Makefile。</p>
+</li>
+<li><p>读入被include的其它Makefile。</p>
+</li>
+<li><p>初始化文件中的变量。</p>
+</li>
+<li><p>推导隐晦规则，并分析所有规则。</p>
+</li>
+<li><p>为所有的目标文件创建依赖关系链。</p>
+</li>
+<li><p>根据依赖关系，决定哪些目标要重新生成。</p>
+</li>
+<li><p>执行生成命令。</p>
+</li>
+</ol>
+<p>1-5步为第一个阶段，6-7为第二个阶段。第一个阶段中，如果定义的变量被使用了，那么，make会把其展开在使用的位置。但make并不会完全马上展开，make使用的是拖延战术，如果变量出现在依赖关系的规则中，那么仅当这条依赖被决定要使用了，变量才会在其内部展开。</p>
+<p>当然，这个工作方式你不一定要清楚，但是知道这个方式你也会对make更为熟悉。有了这个基础，后续部分也就容易看懂了。</p>
+<p><strong>3 Makefile书写规则</strong></p>
+<p><strong> 规则包含两个部分，一个是依赖关系</strong>，<strong>一个是生成目标的方法</strong>。</p>
+<p><strong>在Makefile中，规则的顺序是很重要的</strong>，因为，<strong>Makefile中只应该有一个最终目标</strong>，其它的目标都是被这个目标所连带出来的，所以一定要让make知道你的最终目标是什么。一般来说，定义在Makefile中的目标可能会有很多，但是<strong>第一条规则中的目标将被确立为最终的目标</strong>。如果第一条规则中的目标有很多个，那么，第一个目标会成为最终的目标。<strong>make所完成的也就是这个目标</strong>。</p>
+<p>好了，还是让我们来看一看如何书写规则。</p>
+<p><strong>3.1 规则举例</strong></p>
+<p> foo.o: foo.cdefs.h       # foo模块  //这是一个注释</p>
+<p>​           cc-c -g foo.c</p>
+<p>看到这个例子，各位应该不是很陌生了，前面也已说过，<strong>foo.o是我们的目标，foo.c和defs.h是目标所依赖的源文件，而只有一个命令“cc -c -g foo.c”（以Tab键开头）。这个规则告诉我们两件事</strong>：</p>
+<ol>
+<li><p>文件的依赖关系，foo.o依赖于foo.c和defs.h的文件，如果foo.c和defs.h的文件日期要比foo.o文件日期要新，或是foo.o不存在，那么依赖关系发生。</p>
+</li>
+<li><p>如果生成（或更新）foo.o文件。也就是那个cc命令，其说明了，如何生成foo.o这个文件。（当然foo.c文件include了defs.h文件）</p>
+</li>
+</ol>
+<p><strong>3.2 规则的语法</strong></p>
+<p>​     targets :prerequisites</p>
+<p>​       command</p>
+<p>​       …</p>
+<p>或是这样：</p>
+<p>​     targets : prerequisites; command</p>
+<p>​           command</p>
+<p>​           …</p>
+<p>targets是文件名，以空格分开，可以使用通配符。一般来说，我们的目标基本上是一个文件，但也有可能是多个文件。</p>
+<p>command是命令行，如果其不与“target:prerequisites”在一行，那么，必须以[Tab键]开头，如果和prerequisites在一行，那么可以用分号做为分隔。（见上）</p>
+<p>prerequisites也就是目标所依赖的文件（或依赖目标）。如果其中的某个文件要比目标文件要新，那么，目标就被认为是“过时的”，被认为是需要重生成的。这个在前面已经讲过了。</p>
+<p>如果命令太长，你可以使用反斜框（‘\’）作为换行符。make对一行上有多少个字符没有限制。规则告诉make两件事，<strong>文件的依赖关系和如何成成目标文件</strong>。</p>
+<p><strong>一般来说，make会以UNIX的标准Shell，也就是/bin/sh来执行命令。</strong></p>
+<p><strong>3.3 在规则中使用通配符</strong></p>
+<p>​     如果我们想定义一系列比较类似的文件，我们很自然地就想起使用通配符。make支持三个通配符：“*”，“?”和“[…]”。这是和Unix的B-Shell是相同的。<br><strong>“~”      //在linux中代表用户根目录</strong></p>
+<p>波浪号（“~”）字符在文件名中也有比较特殊的用途。如果是“~/test”，这就表示当前用户的$HOME目录下的test目录。而“~hchen/test”则表示用户hchen的宿主目录下的test目录。（这些都是Unix下的小知识了，make也支持）而在Windows或是MS-DOS下，用户没有宿主目录，那么波浪号所指的目录则根据环境变量“HOME”而定。</p>
+<p><strong>“*“      //通配符就是想去通过标识符去识别一些列文件的总称</strong><br>通配符代替了你一系列的文件，如“<em>.c”表示所有后缀为c的文件。一个需要我们注意的是，如果我们的文件名中有通配符，如：“</em>”，那么可以用转义字符“\”，如“*”来表示真实的“*”字符，而不是任意长度的字符串。</p>
+<p>好吧，还是先来看几个例子吧：</p>
+<p> clean:</p>
+<p>​        rm -f *.o</p>
+<p>上面这个例子我不不多说了，这是操作系统Shell所支持的通配符。这是在命令中的通配符。</p>
+<p> print: *.c</p>
+<p>​        lpr-p<strong> $?</strong></p>
+<p>​        touchprint</p>
+<p>上面这个例子说明了通配符也可以在我们的规则中，目标print依赖于所有的[.c]文件。其中的“<strong>$?</strong>”是一个自动化变量，我会在后面给你讲述。</p>
+<p>   objects =<strong> *.o  //这里就用到通配符号了，这个是代表所有的.O文件</strong></p>
+<p>上面这个例子，表示了，<strong>通符同样可以用在变量中</strong>。并不是说[<em>.o]会展开，不！objects的值就是“</em>.o”。Makefile中的变量其实就是C/C++中的宏。如果你要让<strong>通配符</strong>在变量中展开，也就是让objects的值是所有[.o]的文件名的集合，那么，你可以这样：</p>
+<p>   objects := $(wildcard*.o)</p>
+<p>这种用法由关键字“wildcard”指出，关于Makefile的关键字，我们将在后面讨论。</p>
+<p><strong>3.4 文件搜寻</strong></p>
+<p>​     在一些大的工程中，有大量的源文件，我们通常的做法是把这许多的源文件分类，并存放在不同的目录中。所以，当make需要去找寻文件的依赖关系时，你可以在<strong>文件前加上路径</strong>，<strong>但最好的方法是把一个路径告诉make，让make在自动去找。</strong></p>
+<p>Makefile文件中的特殊变量“VPATH”就是完成这个功能的，如果没有指明这个变量，<strong>make只会在当前的目录中去找寻依赖文件和目标文件。</strong>如果定义了这个变量，那么，make就会在当前目录找不到的情况下，到所指定的目录中去找寻文件了。</p>
+<p>​    VPATH = src:../headers</p>
+<p>上面的的定义指定两个目录，“src”和“../headers”，make会按照这个顺序进行搜索。<strong>目录由“冒号”分隔</strong>。（当然，当前目录永远是最高优先搜索的地方）</p>
+<p>另一个设置文件搜索路径的方法是使用make的“vpath”关键字（注意，它是全小写的），这不是变量，这是一个make的关键字，这和上面提到的那个VPATH变量很类似，但是它更为灵活。它可以指定不同的文件在不同的搜索目录中。这是一个很灵活的功能。它的使用方法有三种：</p>
+<ol>
+<li><p>vpath &lt; pattern&gt; <directories>    为符合模式<pattern>的文件指定搜索目录<directories>。</directories></pattern></directories></p>
+</li>
+<li><p>vpath &lt; pattern&gt;                            清除符合模式&lt; pattern&gt;的文件的搜索目录。</p>
+</li>
+<li><p>vpath                                               清除所有已被设置好了的文件搜索目录。</p>
+</li>
+</ol>
+<p>vapth使用方法中的&lt; pattern&gt;需要包含“%”字符。“%”的意思是匹配零或若干字符，例如，“%.h”表示所有以“.h”结尾的文件。&lt; pattern&gt;指定了要搜索的文件集，而&lt; directories&gt;则指定了的文件集的搜索的目录。例如：</p>
+<p>   vpath %.h ../headers</p>
+<p><strong>该语句表示，要求make在“../headers”目录下搜索所有以“.h”结尾的文件。（如果某文件在当前目录没有找到的话）</strong></p>
+<p>我们可以连续地使用vpath语句，以指定不同搜索策略。如果连续的vpath语句中出现了相同的</p>
+<p>&lt; pattern&gt;，或是被重复了的&lt; pattern&gt;，那么，make会按照vpath语句的先后顺序来执行搜索。如：</p>
+<p>   vpath %.c foo</p>
+<p>   vpath %   blish</p>
+<p>   vpath %.c bar</p>
+<p>其表示“.c”结尾的文件，先在“foo”目录，然后是“blish”，最后是“bar”目录。</p>
+<p>   vpath %.c foo:bar</p>
+<p>   vpath %   blish</p>
+<p>而上面的语句则表示“.c”结尾的文件，先在“foo”目录，然后是“bar”目录，最后才是“blish”目录。</p>
+<p><strong>3.5 伪目标</strong></p>
+<p>最早先的一个例子中，我们提到过一个“clean”的目标，这是一个“伪目标”</p>
+<p>   clean:</p>
+<p>​           rm*.o temp</p>
+<p>正像我们前面例子中的“clean”一样，即然我们生成了许多文件编译文件，我们也应该提供一个清除它们的“目标”以备完整地重编译而用。（以“make clean”来使用该目标）</p>
+<p>因为，我们并不生成“clean”这个文件。“伪目标”并不是一个文件，只是一个标签，由于“<strong>伪目标</strong>”不是文件，所以make无法生成它的依赖关系和决定它是否要执行。我们只有通过显示地指明这个“目标”才能让其生效。当然，“伪目标”的取名不能和文件名重名，不然其就失去了“伪目标”的意义了。</p>
+<p>当然，为了避免和文件重名的这种情况，我们可以使用一个特殊的标记“.PHONY”来显示地指明一个目标是“伪目标”，向make说明，不管是否有这个文件，这个目标就是“伪目标”。</p>
+<p>   .PHONY : clean</p>
+<p>只要有这个声明，不管是否有“clean”文件，要运行“clean”这个目标，只有“make clean”这样。于是整个过程可以这样写：</p>
+<p>   <strong> .PHONY: clean</strong></p>
+<p><strong>   clean:</strong></p>
+<p><strong>           rm*.o temp</strong></p>
+<p>伪目标一般没有依赖的文件。但是，我们也可以为伪目标指定所依赖的文件。伪目标同样可以作为“默认目标”，只要将其放在第一个。一个示例就是，如果你的Makefile需要一口气生成若干个可执行文件，但你只想简单地敲一个make完事，并且，所有的目标文件都写在一个Makefile中，那么你可以使用“伪目标”这个特性：</p>
+<p>   all : prog1 prog2 prog3</p>
+<p>   .PHONY : all</p>
+<p>   prog1 : prog1.o utils.o</p>
+<p>​           cc-o prog1 prog1.o utils.o</p>
+<p>   prog2 : prog2.o</p>
+<p>​           cc-o prog2 prog2.o</p>
+<p>   prog3 : prog3.o sort.outils.o</p>
+<p>​           cc-o prog3 prog3.o sort.o utils.o</p>
+<p>我们知道，Makefile中的第一个目标会被作为其默认目标。我们声明了一个“all”的伪目标，其依赖于其它三个目标。由于伪目标的特性是，总是被执行的，所以其依赖的那三个目标就总是不如“all”这个目标新。所以，其它三个目标的规则总是会被决议。也就达到了我们一口气生成多个目标的目的。“.PHONY : all”声明了“all”这个目标为“伪目标”。</p>
+<p>随便提一句，从上面的例子我们可以看出，目标也可以成为依赖。所以，伪目标同样也可成为依赖。看下面的例子：</p>
+<p>   .PHONY: cleanall cleanobjcleandiff</p>
+<p>   cleanall : cleanobjcleandiff</p>
+<p>​           rmprogram</p>
+<p>   cleanobj :</p>
+<p>​           rm*.o</p>
+<p>   cleandiff :</p>
+<p>​           rm*.diff</p>
+<p>“makeclean”将清除所有要被清除的文件。“cleanobj”和“cleandiff”这两个伪目标有点像“子程序”的意思。我们可以输入“make clean all”和“make clean obj”和“make clean diff”命令来达到清除不同种类文件的目的</p>
+<p><strong>3.6 多目标</strong></p>
+<p>Makefile的规则中的目标可以不止一个，其支持多目标，有可能我们的多个目标同时依赖于一个文件，并且其生成的命令大体类似。于是我们就能把其合并起来。当然，多个目标的生成规则的执行命令是同一个，这可能会可我们带来麻烦，不过好在我们的可以使用一个自动化变量“$@”（关于自动化变量，将在后面讲述），这个变量表示着目前规则中所有的目标的集合，这样说可能很抽象，还是看一个例子吧。</p>
+<p>   bigoutput littleoutput :text.g</p>
+<p>​           generatetext.g -$(subst output,,$@) &gt; $@</p>
+<p>   上述规则等价于：</p>
+<p>   bigoutput : text.g</p>
+<p>​           generatetext.g -big &gt; bigoutput</p>
+<p>   littleoutput : text.g</p>
+<p>​           generatetext.g -little &gt; littleoutput</p>
+<p>其中，-$(subst output,,$@)中的“$”表示执行一个Makefile的函数，函数名为subst，后面的为参数。关于函数，将在后面讲述。这里的这个函数是截取字符串的意思，“$@”表示目标的集合，就像一个数组，“$@”依次取出目标，并执于命令。</p>
+<p><strong>3.7 静态模式</strong></p>
+<p>静态模式可以更加容易地定义多目标的规则，可以让我们的规则变得更加的有弹性和灵活。我们还是先来看一下语法：</p>
+<p>&lt;targets…&gt;: <target-pattern>:<prereq-patterns ...=""></prereq-patterns></target-pattern></p>
+<p>　　　<commands></commands></p>
+<p>…</p>
+<p>targets定义了一系列的目标文件，可以有通配符。是目标的一个集合。</p>
+<p>target-parrtern是指明了targets的模式，也就是的目标集模式。</p>
+<p>prereq-parrterns是目标的依赖模式，它对target-parrtern形成的模式再进行一次依赖目标的定义。</p>
+<p>这样描述这三个东西，可能还是没有说清楚，还是举个例子来说明一下吧。如果我们的<target-parrtern>定义成“%.o”，意思是我们的集合中都是以“.o”结尾的，而如果我们的<prereq-parrterns>定义成“%.c”，意思是对<target-parrtern>所形成的目标集进行二次定义，其计算方法是，取<target-parrtern>模式中的“%”（也就是去掉了[.o]这个结尾），并为其加上[.c]这个结尾，形成的新集合。</target-parrtern></target-parrtern></prereq-parrterns></target-parrtern></p>
+<p>所以，我们的“目标模式”或是“依赖模式”中都应该有“%”这个字符，如果你的文件名中有“%”那么你可以使用反斜杠“\”进行转义，来标明真实的“%”字符。</p>
+<p>看一个例子：</p>
+<p>   objects = foo.o bar.o</p>
+<p>​    all: $(objects)</p>
+<p>​    $(objects): %.o:%.c</p>
+<p>​           $(CC)-c $(CFLAGS) $&lt; -o $@</p>
+<p> 上面的例子中，指明了我们的目标从$object中获取，“%.o”表明要所有以“.o”结尾的目标，也就是“foo.o bar.o”，也就是变量$object集合的模式，而依赖模式“%.c”则取模式“%.o”的“%”，也就是“foobar”，并为其加下“.c”的后缀，于是，我们的依赖目标就是“foo.cbar.c”。而命令中的“$&lt;”和“$@”则是自动化变量，“$&lt;”表示所有的依赖目标集（也就是“foo.c bar.c”），“$@”表示目标集（也褪恰癴oo.o bar.o”）。于是，上面的规则展开后等价于下面的规则：</p>
+<p>   foo.o : foo.c</p>
+<p>​           $(CC)-c $(CFLAGS) foo.c -o foo.o</p>
+<p>   bar.o : bar.c</p>
+<p>​           $(CC)-c $(CFLAGS) bar.c -o bar.o</p>
+<p>试想，如果我们的“%.o”有几百个，那种我们只要用这种很简单的“静态模式规则”就可以写完一堆规则，实在是太有效率了。“静态模式规则”的用法很灵活，如果用得好，那会一个很强大的功能。再看一个例子：</p>
+<p>​    files = foo.elcbar.o lose.o</p>
+<p>​    $(filter%.o,$(files)): %.o: %.c</p>
+<p>​           $(CC)-c $(CFLAGS) $&lt; -o $@</p>
+<p>   $(filter %.elc,$(files)):%.elc: %.el</p>
+<p>​           emacs-f batch-byte-compile $&lt;</p>
+<p>$(filter%.o,$(files))表示调用Makefile的filter函数，过滤“$filter”集，只要其中模式为“%.o”的内容。其的它内容，我就不用多说了吧。这个例字展示了Makefile中更大的弹性。</p>
+<p><strong>3.8 自动生成依赖性</strong></p>
+<p>在Makefile中，我们的依赖关系可能会需要包含一系列的头文件，比如，如果我们的main.c中有一句“#include “defs.h””，那么我们的依赖关系应该是：</p>
+<p>   main.o : main.c defs.h</p>
+<p>但是，如果是一个比较大型的工程，你必需清楚哪些C文件包含了哪些头文件，并且，你在加入或删除头文件时，也需要小心地修改Makefile，这是一个很没有维护性的工作。为了避免这种繁重而又容易出错的事情，我们可以使用C/C++编译的一个功能。大多数的C/C++编译器都支持一个“-M”的选项，即自动找寻源文件中包含的头文件，并生成一个依赖关系。例如，如果我们执行下面的命令：</p>
+<p>   cc -M main.c</p>
+<p>其输出是：</p>
+<p>   main.o : main.c defs.h</p>
+<p>于是由编译器自动生成的依赖关系，这样一来，你就不必再手动书写若干文件的依赖关系，而由编译器自动生成了。需要提醒一句的是，如果你使用GNU的C/C++编译器，你得用“-MM”参数，不然，“-M”参数会把一些标准库的头文件也包含进来。</p>
+<p>gcc-M main.c的输出是：</p>
+<p>   main.o: main.c defs.h /usr/include/stdio.h/usr/include/features.h \</p>
+<p>​        /usr/include/sys/cdefs.h/usr/include/gnu/stubs.h \</p>
+<p>​        /usr/lib/gcc-lib/i486-suse-linux/2.95.3/include/stddef.h\</p>
+<p>​        /usr/include/bits/types.h/usr/include/bits/pthreadtypes.h \</p>
+<p>​        /usr/include/bits/sched.h/usr/include/libio.h \</p>
+<p>​        /usr/include/_G_config.h/usr/include/wchar.h \</p>
+<p>​        /usr/include/bits/wchar.h/usr/include/gconv.h \</p>
+<p>​        /usr/lib/gcc-lib/i486-suse-linux/2.95.3/include/stdarg.h\</p>
+<p>​        /usr/include/bits/stdio_lim.h</p>
+<p> gcc-MM main.c的输出则是：</p>
+<p>   main.o: main.c defs.h</p>
+<p>那么，编译器的这个功能如何与我们的Makefile联系在一起呢。因为这样一来，我们的Makefile也要根据这些源文件重新生成，让Makefile自已依赖于源文件？这个功能并不现实，不过我们可以有其它手段来迂回地实现这一功能。GNU组织建议把编译器为每一个源文件的自动生成的依赖关系放到一个文件中，为每一个“name.c”的文件都生成一个“name.d”的Makefile文件，[.d]文件中就存放对应[.c]文件的依赖关系。</p>
+<p>于是，我们可以写出[.c]文件和[.d]文件的依赖关系，并让make自动更新或自成[.d]文件，并把其包含在我们的主Makefile中，这样，我们就可以自动化地生成每个文件的依赖关系了。</p>
+<p>这里，我们给出了一个模式规则来产生[.d]文件：</p>
+<p>   %.d: %.c</p>
+<p>​           @set-e; rm -f $@; \</p>
+<p>​            $(CC)-M $(CPPFLAGS) $&lt; &gt; $@.</p>
+<p>; \</p>
+<p>​            sed’s,$∗.o[ :]*,\1.o $@ : ,g’ &lt; $@.</p>
+<p>>$@; \</p>
+<p>​            rm-f $@.</p>
+<p>这个规则的意思是，所有的[.d]文件依赖于[.c]文件，“rm-f $@”的意思是删除所有的目标，也就是[.d]文件，第二行的意思是，为每个依赖文件“$&lt;”，也就是[.c]文件生成依赖文件，“$@”表示模式“%.d”文件，如果有一个C文件是name.c，那么“%”就是“name”，“</p>
+<p>”意为一个随机编号，第二行生成的文件有可能是“name.d.12345”，第三行使用sed命令做了一个替换，关于sed命令的用法请参看相关的使用文档。第四行就是删除临时文件。</p>
+<p>总而言之，这个模式要做的事就是在编译器生成的依赖关系中加入[.d]文件的依赖，即把依赖关系：</p>
+<p>   main.o : main.c defs.h</p>
+<p>转成：</p>
+<p>   main.o main.d : main.cdefs.h</p>
+<p>于是，我们的[.d]文件也会自动更新了，并会自动生成了，当然，你还可以在这个[.d]文件中加入的不只是依赖关系，包括生成的命令也可一并加入，让每个[.d]文件都包含一个完赖的规则。一旦我们完成这个工作，接下来，我们就要把这些自动生成的规则放进我们的主Makefile中。我们可以使用Makefile的“include”命令，来引入别的Makefile文件（前面讲过），例如：</p>
+<p>   sources = foo.c bar.c</p>
+<p>​    include$(sources:.c=.d)</p>
+<p>上述语句中的“$(sources:.c=.d)”中的“.c=.d”的意思是做一个替换，把变量$(sources)所有[.c]的字串都替换成[.d]，关于这个“替换”的内容，在后面我会有更为详细的讲述。当然，你得注意次序，因为include是按次来载入文件，最先载入的[.d]文件中的目标会成为默认目标</p>
+<p><strong>4 Makefile 书写命令</strong></p>
+<p>​      <strong>每条规则中的命令和操作系统Shell的命令行是一致的。make会一按顺序一条一条的执行命令，每条命令的开头必须以[Tab]键开头，除非，命令是紧跟在依赖规则后面的分号后的。</strong>在命令行之间中的空格或是空行会被忽略，但是如果该空格或空行是以Tab键开头的，那么make会认为其是一个空命令。</p>
+<p>我们在UNIX下可能会使用不同的Shell，但是make的命令默认是被“/bin/sh”——UNIX的标准Shell解释执行的。除非你特别指定一个其它的Shell。Makefile中，“#”是注释符，很像C/C++中的“//”，其后的本行字符都被注释。</p>
+<p><strong>4.1 显示命令</strong></p>
+<p>通常，make会把其要执行的命令行在命令执行前输出到屏幕上。当我们用“@”字符在命令行前，那么，这个命令将不被make显示出来，最具代表性的例子是，我们用这个功能来像屏幕显示一些信息。如：</p>
+<p>   @echo 正在编译XXX模块……</p>
+<p>当make执行时，会输出“正在编译XXX模块……”字串，但不会输出命令，如果没有“@”，那么，make将输出：</p>
+<p>   echo 正在编译XXX模块……</p>
+<p>   正在编译XXX模块……</p>
+<p>如果make执行时，带入make参数“-n”或“–just-print”，那么其只是显示命令，但不会执行命令，这个功能很有利于我们调试我们的Makefile，看看我们书写的命令是执行起来是什么样子的或是什么顺序的。</p>
+<p>而make参数“-s”或“–slient”则是全面禁止命令的显示。</p>
+<p><strong>4.2 命令执行</strong></p>
+<p>当依赖目标新于目标时，也就是当规则的目标需要被更新时，make会一条一条的执行其后的命令。需要注意的是，如果你要让上一条命令的结果应用在下一条命令时，你应该使用分号分隔这两条命令。比如你的第一条命令是cd命令，你希望第二条命令得在cd之后的基础上运行，那么你就不能把这两条命令写在两行上，而应该把这两条命令写在一行上，用分号分隔。如：</p>
+<p>   示例一：</p>
+<p>​       exec:</p>
+<p>​               cd/home/hchen</p>
+<p>​               pwd</p>
+<p>​    示例二：</p>
+<p>​       exec:</p>
+<p>​               cd/home/hchen; pwd</p>
+<p>当我们执行“make exec”时，第一个例子中的cd没有作用，pwd会打印出当前的Makefile目录，而第二个例子中，cd就起作用了，pwd会打印出“/home/hchen”。</p>
+<p>make一般是使用环境变量SHELL中所定义的系统Shell来执行命令，默认情况下使用UNIX的标准Shell——/bin/sh来执行命令。但在MS-DOS下有点特殊，因为MS-DOS下没有SHELL环境变量，当然你也可以指定。如果你指定了UNIX风格的目录形式，首先，make会在SHELL所指定的路径中找寻命令解释器，如果找不到，其会在当前盘符中的当前目录中寻找，如果再找不到，其会在PATH环境变量中所定义的所有路径中寻找。MS-DOS中，如果你定义的命令解释器没有找到，其会给你的命令解释器加上诸如“.exe”、“.com”、“.bat”、“.sh”等后缀。</p>
+<p><strong>4.3 命令出错</strong></p>
+<p>​      每当命令运行完后，make会检测每个命令的返回码，如果命令返回成功，那么make会执行下一条命令，当规则中所有的命令成功返回后，这个规则就算是成功完成了。如果一个规则中的某个命令出错了（命令退出码非零），那么make就会终止执行当前规则，这将有可能终止所有规则的执行。</p>
+<p>有些时候，命令的出错并不表示就是错误的。例如mkdir命令，我们一定需要建立一个目录，如果目录不存在，那么mkdir就成功执行，万事大吉，如果目录存在，那么就出错了。我们之所以使用mkdir的意思就是一定要有这样的一个目录，于是我们就不希望mkdir出错而终止规则的运行。</p>
+<p>为了做到这一点，忽略命令的出错，我们可以在Makefile的命令行前加一个减号“-”（在Tab键之后），标记为不管命令出不出错都认为是成功的。如：</p>
+<p>  clean:</p>
+<p>​           -rm-f *.o</p>
+<p>还有一个全局的办法是，给make加上“-i”或是“–ignore-errors”参数，那么，Makefile中所有命令都会忽略错误。而如果一个规则是以“.IGNORE”作为目标的，那么这个规则中的所有命令将会忽略错误。这些是不同级别的防止命令出错的方法，你可以根据你的不同喜欢设置。</p>
+<p>还有一个要提一下的make的参数的是“-k”或是“–keep-going”，这个参数的意思是，如果某规则中的命令出错了，那么就终目该规则的执行，但继续执行其它规则。</p>
+<p><strong>4.4 嵌套执行make</strong></p>
+<p>​       在一些大的工程中，我们会把我们不同模块或是不同功能的源文件放在不同的目录中，我们可以在每个目录中都书写一个该目录的Makefile，这有利于让我们的Makefile变得更加地简洁，而不至于把所有的东西全部写在一个Makefile中，这样会很难维护我们的Makefile，这个技术对于我们模块编译和分段编译有着非常大的好处。<br>​     例如，我们有一个子目录叫subdir，这个目录下有个Makefile文件，来指明了这个目录下文件的编译规则。那么我们总控的Makefile可以这样书写：</p>
+<p>   subsystem:</p>
+<p>​           cdsubdir &amp;&amp; $(MAKE)</p>
+<p>其等价于：</p>
+<p>​    subsystem:</p>
+<p>​           $(MAKE)-C subdir</p>
+<p>定义$(MAKE)宏变量的意思是，也许我们的make需要一些参数，所以定义成一个变量比较利于维护。这两个例子的意思都是先进入“subdir”目录，然后执行make命令。</p>
+<p>我们把这个Makefile叫做“总控Makefile”，总控Makefile的变量可以传递到下级的Makefile中（如果你显示的声明），但是不会覆盖下层的Makefile中所定义的变量，除非指定了“-e”参数。</p>
+<p>如果你要传递变量到下级Makefile中，那么你可以使用这样的声明：</p>
+<p>export<variable ...=""></variable></p>
+<p>如果你不想让某些变量传递到下级Makefile中，那么你可以这样声明：</p>
+<p>unexport<variable ...=""></variable></p>
+<p>如：</p>
+<p>​      示例一：</p>
+<p>​        exportvariable = value<br>  其等价于：</p>
+<p>​       variable = value</p>
+<p>​        exportvariable</p>
+<p>​       其等价于：</p>
+<p>​        exportvariable := value</p>
+<p>​        其等价于：</p>
+<p>​        variable:= value</p>
+<p>​       exportvariable</p>
+<p>​    示例二：</p>
+<p>​        exportvariable += value</p>
+<p>​        其等价于：</p>
+<p>​        variable+= value</p>
+<p>​       exportvariable</p>
+<p>​     如果你要传递所有的变量，那么，只要一个export就行了。后面什么也不用跟，表示传递所有的变量。</p>
+<p>需要注意的是，有两个变量，一个是SHELL，一个是MAKEFLAGS，这两个变量不管你是否export，其总是要传递到下层Makefile中，特别是MAKEFILES变量，其中包含了make的参数信息，如果我们执行“总控Makefile”时有make参数或是在上层Makefile中定义了这个变量，那么MAKEFILES变量将会是这些参数，并会传递到下层Makefile中，这是一个系统级的环境变量。</p>
+<p>但是make命令中的有几个参数并不往下传递，它们是“-C”,“-f”,“-h”“-o”和“-W”（有关Makefile参数的细节将在后面说明），如果你不想往下层传递参数，那么，你可以这样来：</p>
+<p>​      subsystem:</p>
+<p>​           cdsubdir &amp;&amp; $(MAKE) MAKEFLAGS=</p>
+<p>如果你定义了环境变量MAKEFLAGS，那么你得确信其中的选项是大家都会用到的，如果其中有“-t”,“-n”,和“-q”参数，那么将会有让你意想不到的结果，或许会让你异常地恐慌。</p>
+<p>还有一个在“嵌套执行”中比较有用的参数，“-w”或是“–print-directory”会在make的过程中输出一些信息，让你看到目前的工作目录。比如，如果我们的下级make目录是“/home/hchen/gnu/make”，如果我们使用“make -w”来执行，那么当进入该目录时，我们会看到：</p>
+<p>​      make: Entering directory`/home/hchen/gnu/make’.</p>
+<p>而在完成下层make后离开目录时，我们会看到：  </p>
+<p>​     make: Leaving directory`/home/hchen/gnu/make’</p>
+<p>当你使用“-C”参数来指定make下层Makefile时，“-w”会被自动打开的。如果参数中有“-s”（“–slient”）或是“–no-print-directory”，那么，“-w”总是失效的。</p>
+<p><strong>4.5 定义命令包</strong></p>
+<p>如果Makefile中出现一些相同命令序列，那么我们可以为这些相同的命令序列定义一个变量。定义这种命令序列的语法以“define”开始，以“endef”结束，如：</p>
+<p>   define run-yacc</p>
+<p>   yacc $(firstword $^)</p>
+<p>   mv y.tab.c $@</p>
+<p>   endef</p>
+<p>这里，“run-yacc”是这个命令包的名字，其不要和Makefile中的变量重名。在“define”和“endef”中的两行就是命令序列。这个命令包中的第一个命令是运行Yacc程序，因为Yacc程序总是生成“y.tab.c”的文件，所以第二行的命令就是把这个文件改改名字。还是把这个命令包放到一个示例中来看看吧。</p>
+<p>   foo.c : foo.y</p>
+<p>​           $(run-yacc)</p>
+<p>我们可以看见，要使用这个命令包，我们就好像使用变量一样。在这个命令包的使用中，命令包“run-yacc”中的“$^”就是“foo.y”，“$@”就是“foo.c”（有关这种以“$”开头的特殊变量，我们会在后面介绍），make在执行命令包时，命令包中的每个命令会被依次独立执行。</p>
+<p><strong> 使用变量</strong><br>​     在Makefile中的定义的变量，就像是C/C++语言中的宏一样，他代表了一个文本字串，在Makefile中执行的时候其会自动原模原样地展开在所使用的地方。其与C/C++所不同的是，你可以在Makefile中改变其值。在Makefile中，变量可以使用在“目标”，“依赖目标”，“命令”或是 Makefile的其它部分中。变量的命名字可以包含字符、数字，下划线（可以是数字开头），但不应该含有“:”、“#”、“=”或是空字符（空格、回车等）。变量是大小写敏感的，“foo”、“Foo”和“FOO”是三个不同的变量名。传统的Makefile的变量名是全大写的命名方式，但我推荐使用大小写搭配的变量名，如：MakeFlags。这样可以避免和系统的变量冲突，而发生意外的事情。有一些变量是很奇怪字串，如“$&lt;”、“$@”等，这些是自动化变量，我会在后面介绍。</p>
+<p><strong>一、变量的基础</strong><br>​    变量在声明时需要给予初值，而在使用时，需要给在变量名前<strong>加上“$”符号，但最好用小括号“（）”或是大括号“{}”把变量给包括起来</strong>。如果你要使用真实的“$”字符，那么你需要用“$$”来表示。变量可以使用在许多地方，如规则中的“目标”、“依赖”、“命令”以及新的变量中。<br>先看一个例子：<br>objects = program.o foo.o utils.o<br>program : $(objects)<br>cc -o program $(objects)<br>$(objects) : defs.h<br>变量会在使用它的地方精确地展开，就像C/C++中的宏一样，例如：<br>foo = c<br>prog.o : prog.$(foo)<br>$(foo)$(foo) -$(foo) prog.$(foo)<br>展开后得到：<br>prog.o : prog.c<br>cc -c prog.c<br>当然，千万不要在你的Makefile中这样干，这里只是举个例子来表明Makefile中的变量在使用处展开的真实样子。可见其就是一个“替代”的原理。另外，给变量加上括号完全是为了更加安全地使用这个变量，在上面的例子中，如果你不想给变量加上括号，那也可以，但我还是强烈建议你给变量加上括号。</p>
+<p><strong>二、变量中的变量</strong><br>在定义变量的值时，我们可以使用其它变量来构造变量的值，在Makefile中有两种方式来在用变量定义变量的值。<br>先看第一种方式，也就是简单的使用“=”号，在“=”左侧是变量，右侧是变量的值，右侧变量的值可以定义在文件的任何一处，也就是说，右侧中的变量不一定非要是已定义好的值，其也可以使用后面定义的值。如：<br>foo = $(bar)<br>bar = $(ugh)<br>ugh = Huh?<br>all:<br>echo $(foo)<br>我们执行“makeall”将会打出变量$(foo)的值是“Huh?”（$(foo)的值是$(bar)，$(bar)的值是$(ugh)，$(ugh)的值是“Huh?”）可见，变量是可以使用后面的变量来定义的。<br>这个功能有好的地方，也有不好的地方，好的地方是，我们可以把变量的真实值推到后面来定义，如：<br>CFLAGS =$(include_dirs) -O<br>include_dirs = -Ifoo -Ibar<br>当“CFLAGS”在命令中被展开时，会是“-Ifoo -Ibar -O”。但这种形式也有不好的地方<br>，那就是递归定义，如：<br>CFLAGS = $(CFLAGS) -O<br>或：<br>A = $(B)<br>B = $(A)<br>这会让make陷入无限的变量展开过程中去，当然，我们的make是有能力检测这样的定义，并会报错。还有就是如果在变量中使用函数，那么，这种方式会让我们的make运行时非常慢，更糟糕的是，他会使用得两个make的函数“wildcard”和“shell”发生不可预知的错误。因为你不会知道这两个函数会被调用多少次。为了避免上面的这种方法，我们可以使用make中的另一种用变量来定义变量的方法。这种方法使用的是“:=”操作符，如：<br>x := foo<br>y := $(x) bar<br>x := later<br>其等价于：<br>y := foo bar<br>x := later<br>值得一提的是，这种方法，前面的变量不能使用后面的变量，只能使用前面已定义好了的变量。如果是这样：<br>y := $(x) bar<br>x := foo<br>那么，y的值是“bar”，而不是“foo bar”。<br>上面都是一些比较简单的变量使用了，让我们来看一个复杂的例子，其中包括了make的函数、条件表达式和一个系统变量“MAKELEVEL”的使用：<br>ifeq (0,${MAKELEVEL})<br>cur-dir := $(shell pwd)<br>whoami := $(shell whoami)<br>host-type := $(shell arch)<br>MAKE := ${MAKE} host-type=${host-type} whoami=${whoami}<br>endif<br>关于条件表达式和函数，我们在后面再说，对于系统变量“MAKELEVEL”，其意思是，如果我们的make有一个嵌套执行的动作（参见前面的“嵌套使用make”），那么，这个变量会记录了我们的当前Makefile的调用层数。<br>下面再介绍两个定义变量时我们需要知道的，请先看一个例子，如果我们要定义一个变量，其值是一个空格，那么我们可以这样来：<br>nullstring :=<br>space := $(nullstring) # end of the line<br>nullstring 是一个Empty变量，其中什么也没有，而我们的space的值是一个空格。因为在操作符的右边是很难描述一个空格的，这里采用的技术很管用，先用一个 Empty变量来标明变量的值开始了，而后面采用“#”注释符来表示变量定义的终止，这样，我们可以定义出其值是一个空格的变量。请注意这里关于“#”的使用，注释符“#”的这种特性值得我们注意，如果我们这样定义一个变量：<br>dir := /foo/bar # directory to put the frobs in<br>dir这个变量的值是“/foo/bar”，后面还跟了4个空格，如果我们这样使用这样变量来指定别的目录——“$(dir)/file”那么就完蛋了。<br>还有一个比较有用的操作符是“?=”，先看示例：<br>FOO ?= bar<br>其含义是，如果FOO没有被定义过，那么变量FOO的值就是“bar”，如果FOO先前被定义过，那么这条语将什么也不做，其等价于：<br>ifeq ($(origin FOO), undefined)<br>FOO = bar<br>endif<br><strong>三、变量高级用法</strong></p>
+<p>这里介绍两种变量的高级使用方法，第一种是变量值的替换。<br>我们可以替换变量中的共有的部分，其格式是“$(var:a=b)”或是“${var:a=b}”，其意思是，把变量“var”中所有以“a”字串“结尾”的“a”替换成“b”字串。这里的“结尾”意思是“空格”或是“结束符”。</p>
+<p>还是看一个示例吧：<br>foo := a.o b.o c.o<br>bar := $(foo:.o=.c)<br>这个示例中，我们先定义了一个“$(foo)”变量，而第二行的意思是把“$(foo)”中所有以“.o”字串“结尾”全部替换成“.c”，所以我们的“$(bar)”的值就是“a.c b.c c.c”。<br>另外一种变量替换的技术是以“静态模式”（参见前面章节）定义的，如：<br>foo := a.o b.o c.o<br>bar := $(foo:%.o=%.c)<br>这依赖于被替换字串中的有相同的模式，模式中必须包含一个“%”字符，这个例子同样让$(bar)变量的值为“a.c b.c c.c”。<br>第二种高级用法是——“把变量的值再当成变量”。先看一个例子：<br>x = y<br>y = z<br>a := $($(x))<br>在这个例子中，$(x)的值是“y”，所以$($(x))就是$(y)，于是$(a)的值就是“z”。（注意，是“x=y”，而不是“x=$(y)”）<br>我们还可以使用更多的层次：<br>x = y<br>y = z<br>z = u<br>a := $($($(x)))<br>这里的$(a)的值是“u”，相关的推导留给读者自己去做吧。<br>让我们再复杂一点，使用上“在变量定义中使用变量”的第一个方式，来看一个例子：<br>x = $(y)<br>y = z<br>z = Hello<br>a := $($(x))<br>这里的$($(x))被替换成了$($(y))，因为$(y)值是“z”，所以，最终结果是：a:=$(z)，也就是“Hello”。<br>再复杂一点，我们再加上函数：</p>
+<p>x = variable1<br>variable2 := Hello<br>y = $(subst 1,2,$(x))<br>z = y<br>a := $($($(z)))<br>这个例子中，“$($($(z)))”扩展为“$($(y))”，而其再次被扩展为“$($(subst 1,2,$(x)))”。$(x)的值是“variable1”，subst函数把“variable1”中的所有“1”字串替换成“2”字串，于是，“variable1”变成“variable2”，再取其值，所以，最终，$(a)的值就是$(variable2)的值—— “Hello”。（喔，好不容易）<br>在这种方式中，或要可以使用多个变量来组成一个变量的名字，然后再取其值：<br>first_second = Hello<br>a = first<br>b = second<br>all = $($a_$b)<br>这里的“$a_$b”组成了“first_second”，于是，$(all)的值就是“Hello”。<br>再来看看结合第一种技术的例子：<br>a_objects := a.o b.o c.o<br>1_objects := 1.o 2.o 3.o<br>sources := $($(a1)_objects:.o=.c)<br>这个例子中，如果$(a1)的值是“a”的话，那么，$(sources)的值就是“a.c b.c c.c”；如果$(a1)的值是“1”，那么$(sources)的值是“1.c2.c 3.c”。<br>再来看一个这种技术和“函数”与“条件语句”一同使用的例子：<br>ifdef do_sort<br>func := sort<br>else<br>func := strip<br>endif<br>bar := a d b g q c<br>foo := $($(func) $(bar))<br>这个示例中，如果定义了“do_sort”，那么：foo := $(sort a d b g q c)，于是$(foo)的值就是“a b c d g q”，而如果没有定义“do_sort”，那么：foo := $(sort a d bg q c)，调用的就是strip函数。<br>当然，“把变量的值再当成变量”这种技术，同样可以用在操作符的左边：<br>dir = foo<br>$(dir)_sources := $(wildcard $(dir)/*.c)<br>define $(dir)_print<br>lpr $($(dir)_sources)<br>endef<br>这个例子中定义了三个变量：“dir”，“foo_sources”和“foo_print”。</p>
+<p><strong>四、追加变量值</strong></p>
+<p>我们可以使用“+=”操作符给变量追加值，如：<br>objects = main.o foo.o bar.o utils.o<br>objects += another.o<br>于是，我们的$(objects)值变成：“main.o foo.o bar.o utils.o another.o”（another.o被追加进去了）<br>使用“+=”操作符，可以模拟为下面的这种例子：<br>objects = main.o foo.o bar.o utils.o<br>objects := $(objects) another.o<br>所不同的是，用“+=”更为简洁。<br>如果变量之前没有定义过，那么，“+=”会自动变成“=”，如果前面有变量定义，那么“+=”会继承于前次操作的赋值符。如果前一次的是“:=”，那么“+=”会以“:=”作为其赋值符，如：<br>variable := value<br>variable += more<br>等价于：<br>variable := value<br>variable := $(variable) more<br>但如果是这种情况：<br>variable = value<br>variable += more<br>由于前次的赋值符是“=”，所以“+=”也会以“=”来做为赋值，那么岂不会发生变量的递补归定义，这是很不好的，所以make会自动为我们解决这个问题，我们不必担心这个问题。</p>
+<p><strong>五、override 指示符</strong></p>
+<p>如果有变量是通常make的命令行参数设置的，那么Makefile中对这个变量的赋值会被忽略。如果你想在Makefile中设置这类参数的值，那么，你可以使用“override”指示符。其语法是：</p>
+<p>override <variable> = <value><br>override <variable> := <value><br>当然，你还可以追加：<br>override <variable> += <more text=""><br>对于多行的变量定义，我们用define指示符，在define指示符前，也同样可以使用ovveride指示符，如：<br>override define foo<br>bar<br>endef<br><strong>六、多行变量</strong></more></variable></value></variable></value></variable></p>
+<p>还有一种设置变量值的方法是使用define关键字。使用define关键字设置变量的值可以有换行，这有利于定义一系列的命令（前面我们讲过“命令包”的技术就是利用这个关键字）。define指示符后面跟的是变量的名字，而重起一行定义变量的值，定义是以endef关键字结束。其工作方式和“=”操作符一样。变量的值可以包含函数、命令、文字，或是其它变量。因为命令需要以[Tab]键开头，所以如果你用define定义的命令变量中没有以[Tab]键开头，那么make就不会把其认为是命令。<br>下面的这个示例展示了define的用法：<br>define two-lines<br>echo foo<br>echo $(bar)<br>endef</p>
+<p><strong>七、环境变量</strong>make运行时的系统环境变量可以在make开始运行时被载入到Makefile文件中，但是如果Makefile中已定义了这个变量，或是这个变量由make命令行带入，那么系统的环境变量的值将被覆盖。（如果make指定了“-e”参数，那么，系统环境变量将覆盖Makefile中定义的变量）因此，如果我们在环境变量中设置了“CFLAGS”环境变量，那么我们就可以在所有的Makefile中使用这个变量了。这对于我们使用统一的编译参数有比较大的好处。如果Makefile中定义了CFLAGS，那么则会使用Makefile中的这个变量，如果没有定义则使用系统环境变量的值，一个共性和个性的统一，很像“全局变量”和“局部变量”的特性。     当make嵌套调用时（参见前面的“嵌套调用”章节），上层Makefile中定义的变量会以系统环境变量的方式传递到下层的Makefile中。当然，默认情况下，只有通过命令行设置的变量会被传递。而定义在文件中的变量，如果要向下层 Makefile传递，则需要使用exprot关键字来声明。（参见前面章节） 当然，我并不推荐把许多的变量都定义在系统环境中，这样，在我们执行不用的Makefile时，拥有的是同一套系统变量，这可能会带来更多的麻烦。<br><strong>八、目标变量</strong>前面我们所讲的在Makefile中定义的变量都是“全局变量”，在整个文件，我们都可以访问这些变量。当然，“自动化变量”除外，如“$&lt;”等这种类量的自动化变量就属于“规则型变量”，这种变量的值依赖于规则的目标和依赖目标的定义。<br>当然，我样同样可以为某个目标设置局部变量，这种变量被称为“Target-specific Variable”，它可以和“全局变量”同名，因为它的作用范围只在这条规则以及连带规则中，所以其值也只在作用范围内有效。而不会影响规则链以外的全局变量的值。<br>其语法是：</p>
+<p><target ...=""> : <variable-assignment></variable-assignment></target></p>
+<p><target ...=""> : overide<variable-assignment></variable-assignment></target></p>
+<p><variable-assignment>可以是前面讲过的各种赋值表达式，如“=”、“:=”、“+=”或是“？=”。第二个语法是针对于make命令行带入的变量，或是系统环境变量。<br>这个特性非常的有用，当我们设置了这样一个变量，这个变量会作用到由这个目标所引发的所有的规则中去。如：<br>prog : CFLAGS = -g<br>prog : prog.o foo.o bar.o<br>$(CC) $(CFLAGS) prog.o foo.o bar.o<br>prog.o : prog.c<br>$(CC) $(CFLAGS) prog.c<br>foo.o : foo.c<br>$(CC) $(CFLAGS) foo.c<br>bar.o : bar.c<br>$(CC) $(CFLAGS) bar.c<br>在这个示例中，不管全局的$(CFLAGS)的值是什么，在prog目标，以及其所引发的所有规则中（prog.o foo.o bar.o的规则），$(CFLAGS)的值都是“-g”<br><strong>九、模式变量</strong><br>在GNU的make中，还支持模式变量（Pattern-specific Variable），通过上面的目标变量中，我们知道，变量可以定义在某个目标上。模式变量的好处就是，我们可以给定一种“模式”，可以把变量定义在符合这种模式的所有目标上。<br>我们知道，make的“模式”一般是至少含有一个“%”的，所以，我们可以以如下方式给所有以[.o]结尾的目标定义目标变量：<br>%.o : CFLAGS = -O<br>同样，模式变量的语法和“目标变量”一样：</variable-assignment></p>
+<p><pattern ...=""> : <variable-assignment></variable-assignment></pattern></p>
+<p><pattern ...=""> : override<variable-assignment><br>override同样是针对于系统环境传入的变量，或是make命令行指定的变量。<br>使用条件判断，可以让make根据运行时的不同情况选择不同的执行分支。条件表达式可以是比较变量的值，或是比较变量和常量的值。<br>一、示例<br>下面的例子，判断$(CC)变量是否“gcc”，如果是的话，则使用GNU函数编译目标。<br>libs_for_gcc = -lgnu<br>normal_libs =<br>foo: $(objects)<br>ifeq ($(CC),gcc)<br>$(CC) -o foo $(objects) $(libs_for_gcc)<br>else<br>$(CC) -o foo $(objects) $(normal_libs)<br>endif<br>可见，在上面示例的这个规则中，目标“foo”可以根据变量“$(CC)”值来选取不同的函数库来编译程序。<br>我们可以从上面的示例中看到三个关键字：ifeq、else和endif。ifeq的意思表示条件语句的开始，并指定一个条件表达式，表达式包含两个参数，以逗号分隔，表达式以圆括号括起。else表示条件表达式为假的情况。endif表示一个条件语句的结束，任何一个条件表达式都应该以endif结束。当我们的变量$(CC)值是“gcc”时，目标foo的规则是：<br>foo: $(objects)<br>$(CC) -o foo $(objects) $(libs_for_gcc)<br>而当我们的变量$(CC)值不是“gcc”时（比如“cc”），目标foo的规则是：<br>foo: $(objects)<br>$(CC) -o foo $(objects) $(normal_libs)<br>当然，我们还可以把上面的那个例子写得更简洁一些：<br>libs_for_gcc = -lgnu<br>normal_libs =<br>ifeq ($(CC),gcc)<br>libs=$(libs_for_gcc)<br>else<br>libs=$(normal_libs)<br>endif<br>foo: $(objects)<br>$(CC) -o foo $(objects) $(libs)<br>二、语法<br>条件表达式的语法为：</variable-assignment></pattern></p>
+<p><conditional-directive></conditional-directive></p>
+<p><text-if-true><br>endif<br>以及：</text-if-true></p>
+<p><conditional-directive></conditional-directive></p>
+<p><text-if-true><br>else</text-if-true></p>
+<p><text-if-false><br>endif<br>其中<conditional-directive>表示条件关键字，如“ifeq”。这个关键字有四个。<br>第一个是我们前面所见过的“ifeq”<br>ifeq (<arg1>, <arg2> )<br>ifeq ‘<arg1>‘ ‘<arg2>‘<br>ifeq “<arg1>“”<arg2>“<br>ifeq “<arg1>“ ‘<arg2>‘<br>ifeq ‘<arg1>‘ “<arg2>“<br>比较参数“arg1”和“arg2”的值是否相同。当然，参数中我们还可以使用make的函数。如：<br>ifeq ($(strip $(foo)),)</arg2></arg1></arg2></arg1></arg2></arg1></arg2></arg1></arg2></arg1></conditional-directive></text-if-false></p>
+<p><text-if-empty><br>endif<br>这个示例中使用了“strip”函数，如果这个函数的返回值是空（Empty），那么<text-if-empty>就生效。<br>第二个条件关键字是“ifneq”。语法是：<br>ifneq (<arg1>, <arg2> )<br>ifneq ‘<arg1>‘ ‘<arg2>‘<br>ifneq “<arg1>“”<arg2>“<br>ifneq “<arg1>“ ‘<arg2>‘<br>ifneq ‘<arg1>‘ “<arg2>“<br>其比较参数“arg1”和“arg2”的值是否相同，如果不同，则为真。和“ifeq”类似。<br>第三个条件关键字是“ifdef”。语法是：<br>ifdef <variable-name><br>如果变量<variable-name>的值非空，那到表达式为真。否则，表达式为假。当然，<variable-name>同样可以是一个函数的返回值。注意，ifdef只是测试一个变量是否有值，其并不会把变量扩展到当前位置。还是来看两个例子：<br>示例一：<br>bar =<br>foo = $(bar)<br>ifdef foo<br>frobozz = yes<br>else<br>frobozz = no<br>endif<br>示例二：<br>foo =<br>ifdef foo<br>frobozz = yes<br>else<br>frobozz = no<br>endif<br>第一个例子中，“$(frobozz)”值是“yes”，第二个则是“no”。<br>第四个条件关键字是“ifndef”。其语法是：<br>ifndef <variable-name><br>这个我就不多说了，和“ifdef”是相反的意思。<br>在<conditional-directive>这一行上，多余的空格是被允许的，但是不能以[Tab]键做为开始（不然就被认为是命令）。而注释符“#”同样也是安全的。“else”和“endif”也<br>一样，只要不是以[Tab]键开始就行了。特别注意的是，make是在读取Makefile时就计算条件表达式的值，并根据条件表达式的值来选择语句，所以，你最好不要把自动化变量（如“$@”等）放入条件表达式中，因为自动化变量是在运行时才有的。而且，为了避免混乱，make不允许把整个条件语句分成两部分放在不同的文件中。<br><strong>使用函数</strong><br>在Makefile中可以使用函数来处理变量，从而让我们的命令或是规则更为的灵活和具有智能。make所支持的函数也不算很多，不过已经足够我们的操作了。函数调用后，函数的返回值可以当做变量来使用。<br><strong>一、函数的调用语法</strong><br>函数调用，很像变量的使用，也是以“$”来标识的，其语法如下：<br>$(<function> <arguments> )<br>或是<br>${<function> <arguments>}<br>这里，<function>就是函数名，make支持的函数不多。<arguments>是函数的参数，参数间以逗号“,”分隔，而函数名和参数之间以“空格”分隔。函数调用以“$”开头，以圆括号或花括号把函数名和参数括起。感觉很像一个变量，是不是？函数中的参数可以使用变量，为了风格的统一，函数和变量的括号最好一样，如使用“$(subst a,b,$(x))”这样的形式，而不是“$(substa,b,${x})”的形式。因为统一会更清楚，也会减少一些不必要的麻烦。<br>还是来看一个示例：<br>comma:= ,<br>empty:=<br>space:= $(empty) $(empty)<br>foo:= a b c<br>bar:= $(subst $(space),$(comma),$(foo))<br>在这个示例中，$(comma)的值是一个逗号。$(space)使用了$(empty)定义了一个空格，$(foo)的值是“a b c”，$(bar)的定义用，调用了函数“subst”，这是一个替换函数，这个函数有三个参数，第一个参数是被替换字串，第二个参数是替换字串，第三个参数是替换操作作用的字串。这个函数也就是把$(foo)中的空格替换成逗号，所以$(bar)的值是“a,b,c”。<br><strong>二、字符串处理函数</strong>$(subst <from>,<to>,<text> )<br>名称：字符串替换函数——subst。<br>功能：把字串<text>中的<from>字符串替换成<to>。<br>返回：函数返回被替换过后的字符串。<br>示例：<br>$(subst ee,EE,feet on the street)，<br>把“feeton the street”中的“ee”替换成“EE”，返回结果是“fEEt on the strEEt”。<br>$(patsubst<pattern>,<replacement>,<text> )<br>名称：模式字符串替换函数——patsubst。<br>功能：查找<text>中的单词（单词以“空格”、“Tab”或“回车”“换行”分隔）是否符合模式<pattern>，如果匹配的话，则以<replacement>替换。这里，<pattern>可以包括通配符“%”，表示任意长度的字串。如果<replacement>中也包含“%”，那么，<replacement>中的这个“%”将是<pattern>中的那个“%”所代表的字串。（可以用“\”来转义，以“\%”来表示真实含义的“%”字符）返回：函数返回被替换过后的字符串。<br>示例：<br>$(patsubst %.c,%.o,x.c.c bar.c)<br>把字串“x.c.cbar.c”符合模式[%.c]的单词替换成[%.o]，返回结果是“x.c.o bar.o”<br>备注：<br>这和我们前面“变量章节”说过的相关知识有点相似。如：<br>“$(var:<pattern>=<replacement> )”<br>相当于<br>“$(patsubst<pattern>,<replacement>,$(var))”，<br>而“$(var:<suffix>=<replacement> )”<br>则相当于<br>“$(patsubst %<suffix>,%<replacement>,$(var))”。<br>例如有：objects= foo.o bar.o baz.o，<br>那么，“$(objects:.o=.c)”和“$(patsubst %.o,%.c,$(objects))”是一样的。<br>$(strip <string> )<br>名称：去空格函数——strip。<br>功能：去掉<string>字串中开头和结尾的空字符。<br>返回：返回被去掉空格的字符串值。<br>示例：<br>$(strip a b c )<br>把字串“ab c ”去到开头和结尾的空格，结果是“a b c”。<br>$(findstring <find>,<in> )<br>名称：查找字符串函数——findstring。<br>功能：在字串<in>中查找<find>字串。<br>返回：如果找到，那么返回<find>，否则返回空字符串。<br>示例：<br>$(findstring a,a b c)<br>$(findstring a,b c)<br>第一个函数返回“a”字符串，第二个返回“”字符串（空字符串）<br>$(filter &lt;pattern…&gt;,<text> )<br>名称：过滤函数——filter。<br>功能：以<pattern>模式过滤<text>字符串中的单词，保留符合模式<pattern>的单词。可以有多个模式。<br>返回：返回符合模式<pattern>的字串。<br>示例：<br>sources := foo.c bar.c baz.s ugh.h<br>foo: $(sources)<br>cc $(filter %.c %.s,$(sources)) -o foo<br>$(filter %.c %.s,$(sources))返回的值是“foo.cbar.c baz.s”。<br>$(filter-out &lt;pattern…&gt;,<text> )<br>名称：反过滤函数——filter-out。<br>功能：以<pattern>模式过滤<text>字符串中的单词，去除符合模式<pattern>的单词。可以有多个模式。<br>返回：返回不符合模式<pattern>的字串。<br>示例：<br>objects=main1.o foo.o main2.o bar.o<br>mains=main1.o main2.o<br>$(filter-out $(mains),$(objects)) 返回值是“foo.obar.o”。<br>$(sort <list> )<br>名称：排序函数——sort。<br>功能：给字符串<list>中的单词排序（升序）。<br>返回：返回排序后的字符串。<br>示例：$(sortfoo bar lose)返回“bar foo lose” 。<br>备注：sort函数会去掉<list>中相同的单词。<br>$(word <n>,<text> )<br>名称：取单词函数——word。<br>功能：取字符串<text>中第<n>个单词。（从一开始）<br>返回：返回字符串<text>中第<n>个单词。如果<n>比<text>中的单词数要大，那么返回空字符串。<br>示例：$(word2, foo bar baz)返回值是“bar”。<br>$(wordlist <s>,<e>,<text> )<br>名称：取单词串函数——wordlist。<br>功能：从字符串<text>中取从<s>开始到<e>的单词串。<s>和<e>是一个数字。<br>返回：返回字符串<text>中从<s>到<e>的单词字串。如果<s>比<text>中的单词数要大，那<br>么返回空字符串。如果<e>大于<text>的单词数，那么返回从<s>开始，到<text>结束的单词串。<br>示例：$(wordlist 2, 3, foo bar baz)返回值是“bar baz”。<br>$(words <text> )<br>名称：单词个数统计函数——words。<br>功能：统计<text>中字符串中的单词个数。<br>返回：返回<text>中的单词数。<br>示例：$(words,foo bar baz)返回值是“3”。<br>备注：如果我们要取<text>中最后的一个单词，我们可以这样：$(word $(words<text>),<text> )。<br>$(firstword <text> )<br>名称：首单词函数——firstword。<br>功能：取字符串<text>中的第一个单词。<br>返回：返回字符串<text>的第一个单词。<br>示例：$(firstwordfoo bar)返回值是“foo”。<br>备注：这个函数可以用word函数来实现：$(word 1,<text> )。<br>以上，是所有的字符串操作函数，如果搭配混合使用，可以完成比较复杂的功能。这里，举一个现实中应用的例子。我们知道，make使用“VPATH”变量来指定“依赖文件”的搜索路径。于是，我们可以利用这个搜索路径来指定编译器对头文件的搜索路径参数CFLAGS，如：<br>override CFLAGS += $(patsubst %,-I%,$(subst :,,$(VPATH)))<br>如果我们的“$(VPATH)”值是“src:../headers”，那么“$(patsubst %,-I%,$(subst:<br>, ,$(VPATH)))”将返回“-Isrc-I../headers”，这正是cc或gcc搜索头文件路径的参数<br>。<strong>三、文件名操作函数</strong><br>下面我们要介绍的函数主要是处理文件名的。每个函数的参数字符串都会被当做一个或是一系列的文件名来对待。<br>$(dir &lt;names…&gt; )<br>名称：取目录函数——dir。<br>功能：从文件名序列<names>中取出目录部分。目录部分是指最后一个反斜杠（“/”）之前的部分。如果没有反斜杠，那么返回“./”。返回：返回文件名序列<names>的目录部分。<br>示例：$(dir src/foo.c hacks)返回值是“src/ ./”。<br>$(notdir &lt;names…&gt; )<br>名称：取文件函数——notdir。<br>功能：从文件名序列<names>中取出非目录部分。非目录部分是指最后一个反斜杠（“/”）之后的部分。<br>返回：返回文件名序列<names>的非目录部分。<br>示例：$(notdir src/foo.c hacks)返回值是“foo.c hacks”。<br>$(suffix &lt;names…&gt; )<br>名称：取后缀函数——suffix。<br>功能：从文件名序列<names>中取出各个文件名的后缀。<br>返回：返回文件名序列<names>的后缀序列，如果文件没有后缀，则返回空字串。<br>示例：$(suffixsrc/foo.c src-1.0/bar.c hacks)返回值是“.c .c”。<br>$(basename &lt;names…&gt; )<br>名称：取前缀函数——basename。<br>功能：从文件名序列<names>中取出各个文件名的前缀部分。<br>返回：返回文件名序列<names>的前缀序列，如果文件没有前缀，则返回空字串。<br>示例：$(basenamesrc/foo.c src-1.0/bar.c hacks)返回值是“src/foo src-1.0/barhacks”。<br>$(addsuffix <suffix>,&lt;names…&gt; )<br>名称：加后缀函数——addsuffix。<br>功能：把后缀<suffix>加到<names>中的每个单词后面。<br>返回：返回加过后缀的文件名序列。<br>示例：$(addsuffix.c,foo bar)返回值是“foo.c bar.c”。<br>$(addprefix <prefix>,&lt;names…&gt; )<br>名称：加前缀函数——addprefix。<br>功能：把前缀<prefix>加到<names>中的每个单词后面。<br>返回：返回加过前缀的文件名序列。<br>示例：$(addprefixsrc/,foo bar)返回值是“src/foo src/bar”。<br>$(join <list1>,<list2> )<br>名称：连接函数——join。<br>功能：把<list2>中的单词对应地加到<list1>的单词后面。如果<list1>的单词个数要比<list2>的多，那么，<list1>中的多出来的单词将保持原样。如果<list2>的单词个数比</list2></list1></list2></list1></list1></list2></list2></list1></names></prefix></prefix></names></suffix></suffix></names></names></names></names></names></names></names></names></text></text></text></text></text></text></text></text></text></text></text></s></text></e></text></s></e></s></text></e></s></e></s></text></text></e></s></text></n></n></text></n></text></text></n></list></list></list></pattern></pattern></text></pattern></text></pattern></pattern></text></pattern></text></find></find></in></in></find></string></string></replacement></suffix></replacement></suffix></replacement></pattern></replacement></pattern></pattern></replacement></replacement></pattern></replacement></pattern></text></text></replacement></pattern></to></from></text></text></to></from></arguments></function></arguments></function></arguments></function></conditional-directive></variable-name></variable-name></variable-name></variable-name></arg2></arg1></arg2></arg1></arg2></arg1></arg2></arg1></arg2></arg1></text-if-empty></text-if-empty></p>
+<p><list1>多，那么，<list2>多出来的单词将被复制到<list2>中。<br>返回：返回连接过后的字符串。<br>示例：$(joinaaa bbb , 111 222 333)返回值是“aaa111 bbb222 333”。<strong>四、foreach 函数</strong>foreach 函数和别的函数非常的不一样。因为这个函数是用来做循环用的，Makefile中的foreach函数几乎是仿照于Unix标准Shell（/bin /sh）中的for语句，或是C-Shell（/bin/csh）中的foreach语句而构建的。它的语法是：<br>$(foreach <var>,<list>,<text>)<br>这个函数的意思是，把参数<list>中的单词逐一取出放到参数<var>所指定的变量中，然后再执行<text>所包含的表达式。每一次<text>会返回一个字符串，循环过程中，<text>的所返回的每个字符串会以空格分隔，最后当整个循环结束时，<text>所返回的每个字符串所组成的整个字符串（以空格分隔）将会是foreach函数的返回值。<br>所以，<var>最好是一个变量名，<list>可以是一个表达式，而<text>中一般会使用<var><br>这个参数来依次枚举<list>中的单词。举个例子：<br>names := a b c d<br>files := $(foreach n,$(names),$(n).o)<br>上面的例子中，$(name)中的单词会被挨个取出，并存到变量“n”中，“$(n).o”每次根据“$(n)”计算出一个值，这些值以空格分隔，最后作为foreach函数的返回，所以，$(f<br>iles)的值是“a.o b.o c.o d.o”。<br>注意，foreach中的<var>参数是一个临时的局部变量，foreach函数执行完后，参数<var>的变量将不在作用，其作用域只在foreach函数当中。<br><strong>五、if 函数</strong>if函数很像GNU的make所支持的条件语句——ifeq（参见前面所述的章节），if函数的语法是：<br>$(if <condition>,<then-part> )<br>或是<br>$(if<condition>,<then-part>,<else-part> )<br>可见，if函数可以包含“else”部分，或是不含。即if函数的参数可以是两个，也可以是三个。<condition>参数是if的表达式，如果其返回的为非空字符串，那么这个表达式就相当于返回真，于是，<then-part>会被计算，否则<else-part> 会被计算。<br>而if函数的返回值是，如果<condition>为真（非空字符串），那个<then-part>会是整个函数的返回值，如果<condition>为假（空字符串），那么<else-part>会是整个函数的返回值，此时如果<else-part>没有被定义，那么，整个函数返回空字串。<br>所以，<then-part>和<else-part>只会有一个被计算。<br><strong>六、call函数</strong><br>call函数是唯一一个可以用来创建新的参数化的函数。你可以写一个非常复杂的表达式，这个表达式中，你可以定义许多参数，然后你可以用call函数来向这个表达式传递参数。其语法是：<br>$(call<expression>,<parm1>,<parm2>,<parm3>…)<br>当 make执行这个函数时，<expression>参数中的变量，如$(1)，$(2)，$(3)等，会被参数<parm1>，<parm2>，<parm3>依次取代。而<expression>的返回值就是 call函数的返回值。例如：<br>reverse = $(1) $(2)<br>foo = $(call reverse,a,b)<br>那么，foo的值就是“a b”。当然，参数的次序是可以自定义的，不一定是顺序的，如：reverse = $(2) $(1)<br>foo = $(call reverse,a,b)<br>此时的foo的值就是“b a”。<br><strong>七、origin函数</strong>origin函数不像其它的函数，他并不操作变量的值，他只是告诉你你的这个变量是哪里来的？其语法是：<br>$(origin <variable> )<br>注意，<variable>是变量的名字，不应该是引用。所以你最好不要在<variable>中使用“$”字符。Origin函数会以其返回值来告诉你这个变量的“出生情况”，下面，是origin函数的返回值:<br>“undefined”<br>如果<variable>从来没有定义过，origin函数返回这个值“undefined”。<br>“default”<br>如果<variable>是一个默认的定义，比如“CC”这个变量，这种变量我们将在后面讲述。<br>“environment”<br>如果<variable>是一个环境变量，并且当Makefile被执行时，“-e”参数没有被打开。<br>“file”<br>如果<variable>这个变量被定义在Makefile中。<br>“command line”<br>如果<variable>这个变量是被命令行定义的。<br>“override”<br>如果<variable>是被override指示符重新定义的。“automatic”<br>如果<variable>是一个命令运行中的自动化变量。关于自动化变量将在后面讲述。<br>这些信息对于我们编写Makefile是非常有用的，例如，假设我们有一个Makefile其包了一个定义文件Make.def，在Make.def中定义了一个变量“bletch”，而我们的环境中也有一个环境变量“bletch”，此时，我们想判断一下，如果变量来源于环境，那么我们就把之重定义了，如果来源于Make.def或是命令行等非环境的，那么我们就不重新定义它。于是，在我们的Makefile中，我们可以这样写：<br>ifdef bletch<br>ifeq “$(origin bletch)””environment”<br>bletch = barf, gag, etc.<br>endif<br>endif<br>当然，你也许会说，使用override关键字不就可以重新定义环境中的变量了吗？为什么需要使用这样的步骤？是的，我们用override是可以达到这样的效果，可是override过于粗<br>暴，它同时会把从命令行定义的变量也覆盖了，而我们只想重新定义环境传来的，而不想重新定义命令行传来的。<strong>八、shell函数</strong><br>shell 函数也不像其它的函数。顾名思义，它的参数应该就是操作系统Shell的命令。它和反引号“`”是相同的功能。这就是说，shell函数把执行操作系统命令后的输出作为函数返回。于是，我们可以用操作系统命令以及字符串处理命令awk，sed等等命令来生成一个变量，如：<br>contents := $(shell cat foo)<br>files := $(shell echo <em>.c)<br>注意，这个函数会新生成一个Shell程序来执行命令，所以你要注意其运行性能，如果你的Makefile中有一些比较复杂的规则，并大量使用了这个函数，那么对于你的系统性能是有害的。特别是Makefile的隐晦的规则可能会让你的shell函数执行的次数比你想像的多得多。<strong>九、控制make的函数</strong>make提供了一些函数来控制make的运行。通常，你需要检测一些运行Makefile时的运行时信息，并且根据这些信息来决定，你是让make继续执行，还是停止。<br>$(error <text ...=""> )<br>产生一个致命的错误，<text ...="">是错误信息。注意，error函数不会在一被使用就会产生错误信息，所以如果你把其定义在某个变量中，并在后续的脚本中使用这个变量，那么也是可以的。例如：<br>示例一：<br>ifdef ERROR_001<br>$(error error is $(ERROR_001))<br>endif<br>示例二：<br>ERR = $(error found an error!)<br>.PHONY: err<br>err: ; $(ERR)<br>示例一会在变量ERROR_001定义了后执行时产生error调用，而示例二则在目录err被执行时才发生error调用。<br>$(warning <text ...=""> )<br>这个函数很像error函数，只是它并不会让make退出，只是输出一段警告信息，而make继续执行。<strong>make </strong>的运行<br>一般来说，最简单的就是直接在命令行下输入make命令，make命令会找当前目录的makefile来执行，一切都是自动的。但也有时你也许只想让 make重编译某些文件，而不是整个工程，而又有的时候你有几套编译规则，你想在不同的时候使用不同的编译规则，等等。本章节就是讲述如何使用make命令的。<br><strong>一、make的退出码</strong><br>make命令执行后有三个退出码：0 —— 表示成功执行。1 —— 如果make运行时出现任何错误，其返回1。2 —— 如果你使用了make的“-q”选项，并且make使得一些目标不需要更新，那么返回2。<br>Make的相关参数我们会在后续章节中讲述。<strong>二、指定Makefile</strong><br>前面我们说过，GNU make找寻默认的Makefile的规则是在当前目录下依次找三个文件——“GNUmakefile”、“makefile”和“Makefile”。其按顺序找这三个文件，一旦找到，就开始读取这个文件并执行。当前，我们也可以给make命令指定一个特殊名字的Makefile。要达到这个功能，我们要使用make的“-f”或是“–file”参数（“– makefile”参数也行）。例如，我们有个makefile的名字是“hchen.mk”，那么，我们可以这样来让make来执行这个文件：<br>make –f hchen.mk<br>如果在make的命令行是，你不只一次地使用了“-f”参数，那么，所有指定的makefile将会被连在一起传递给make执行。<br><strong>三、指定目标</strong><br>一般来说，make的最终目标是makefile中的第一个目标，而其它目标一般是由这个目标连带出来的。这是make的默认行为。当然，一般来说，你的 makefile中的第一个目标是由许多个目标组成，你可以指示make，让其完成你所指定的目标。要达到这一目的很简单，需在make命令后直接跟目标的名字就可以完成（如前面提到的“make clean”形式）任何在makefile中的目标都可以被指定成终极目标，但是除了以“- ”打头，或是包含了“=”的目标，因为有这些字符的目标，会被解析成命令行参数或是变量。甚至没有被我们明确写出来的目标也可以成为make的终极目标，也就是说，只要make可以找到其隐含规则推导规则，那么这个隐含目标同样可以被指定成终极目标。有一个make的环境变量叫“MAKECMDGOALS”，这个变量中会存放你所指定的终极目标的列表，如果在命令行上，你没有指定目标，那么，这个变量是空值。这个变量可以让你使用在一些比较特殊的情形下。比如下面的例子：<br>sources = foo.c bar.c<br>ifneq ( $(MAKECMDGOALS),clean)<br>include $(sources:.c=.d)<br>endif<br>基于上面的这个例子，只要我们输入的命令不是“make clean”，那么makefile会自动包含“foo.d”和“bar.d”这两个makefile。使用指定终极目标的方法可以很方便地让我们编译我们的程序，例如下面这个例子：<br>.PHONY: all<br>all:prog1 prog2 prog3 prog4<br>从这个例子中，我们可以看到，这个makefile中有四个需要编译的程序——“prog1”， “prog2”， “prog3”和 “prog4”，我们可以使用“make all”命令来编译所有的目标（如果把all置成第一个目标，那么只需执行“make”），我们也可以使用“make prog2”来单独编译目标“prog2”。<br>即然make可以指定所有makefile中的目标，那么也包括“伪目标”，于是我们可以根据这种性质来让我们的makefile根据指定的不同的目标来完成不同的事。在Unix世界中，软件发布时，特别是GNU这种开源软件的发布时，其 makefile都包含了编译、安装、打包等功能。我们可以参照这种规则来书写我们的makefile中的目标。<strong>“all” </strong>            这个伪目标是所有目标的目标，其功能一般是编译所有的目标。<strong>“clean”      </strong>这个伪目标功能是删除所有被make创建的文件。<strong>“install”      </strong>这个伪目标功能是安装已编译好的程序，其实就是把目标执行文件拷贝到指定的目标中去。<strong>“print”        </strong>这个伪目标的功能是例出改变过的源文件。<strong>“tar”           </strong> 这个伪目标功能是把源程序打包备份。也就是一个tar文件。<strong>“dist” </strong>          这个伪目标功能是创建一个压缩文件，一般是把tar文件压成Z文件。或是gz文件。<strong>“TAGS” </strong>       这个伪目标功能是更新所有的目标，以备完整地重编译使用。<strong>“check”和“test”   </strong>这两个伪目标一般用来测试makefile的流程。  当然一个项目的makefile中也不一定要书写这样的目标，这些东西都是GNU的东西，但是我想，GNU搞出这些东西一定有其可取之处（等你的UNIX下的程序文件一多时你就会发现这些功能很有用了），这里只不过是说明了，如果你要书写这种功能，最好使用这种名字命名你的目标，这样规范一些，规范的好处就是——不用解释，大家都明白。而且如果你的makefile中有这些功能，一是很实用，二是可以显得你的makefile很专业（不是那种初学者的作品）。<strong>四、检查规则</strong><br>有时候，我们不想让我们的makefile中的规则执行起来，我们只想检查一下我们的命令，或是执行的序列。于是我们可以使用make命令的下述参数：<br>“-n”<br>“–just-print”<br>“–dry-run”<br>“–recon”<br>不执行参数，这些参数只是打印命令，不管目标是否更新，把规则和连带规则下的命令打印出来，但不执行，这些参数对于我们调试makefile很有用处。<br>“-t”<br>“–touch”<br>这个参数的意思就是把目标文件的时间更新，但不更改目标文件。也就是说，make假装编译目标，但不是真正的编译目标，只是把目标变成已编译过的状态。<br>“-q”<br>“–question”<br>这个参数的行为是找目标的意思，也就是说，如果目标存在，那么其什么也不会输出，当然也不会执行编译，如果目标不存在，其会打印出一条出错信息。<br>“-W <file>”<br>“–what-if=<file>”<br>“–assume-new=<file>”<br>“–new-file=<file>”<br>这个参数需要指定一个文件。一般是是源文件（或依赖文件），Make会根据规则推导来运行依赖于这个文件的命令，一般来说，可以和“-n”参数一同使用，来查看这个依赖文件所发生的规则命令另外一个很有意思的用法是结合“-p”和“-v”来输出makefile被执行时的信息（这个将在后面讲述）。<strong>五、make的参数</strong><br>下面列举了所有GNU make 3.80版的参数定义。其它版本和产商的make大同小异，不过其它产商的make的具体参数还是请参考各自的产品文档。<br>“-b”<br>“-m”<br>这两个参数的作用是忽略和其它版本make的兼容性。<br>“-B”<br>“–always-make”<br>认为所有的目标都需要更新（重编译）。<br>“-C <dir>”<br>“–directory=<dir>”<br>指定读取makefile的目录。如果有多个“-C”参数，make的解释是后面的路径以前面的作为相对路径，并以最后的目录作为被指定目录。如：“make –C ~hchen/test –C prog”<br>等价于“make–C ~hchen/test/prog”。<br>“—debug[=<options>]”<br>输出make的调试信息。它有几种不同的级别可供选择，如果没有参数，那就是输出最简单的调试信息。下面是<options>的取值：a —— 也就是all，输出所有的调试信息。（会非常的多）b —— 也就是basic，只输出简单的调试信息。即输出不需要重编译的目标。v —— 也就是verbose，在b选项的级别之上。输出的信息包括哪个makefile被解析，不需要被重编译的依赖文件（或是依赖目标）等。i —— 也就是implicit，输出所以的隐含规则。j —— 也就是jobs，输出执行规则中命令的详细信息，如命令的PID、返回码等。m —— 也就是makefile，输出make读取makefile，更新makefile，执行makefile的信息。<br>“-d”<br>相当于“–debug=a”。<br>“-e”<br>“–environment-overrides”<br>指明环境变量的值覆盖makefile中定义的变量的值。<br>“-f=<file>”<br>“–file=<file>”<br>“–makefile=<file>”<br>指定需要执行的makefile。<br>“-h”<br>“–help”<br>显示帮助信息。<br>“-i”<br>“–ignore-errors”<br>在执行时忽略所有的错误。<br>“-I <dir>”<br>“–include-dir=<dir>”<br>指定一个被包含makefile的搜索目标。可以使用多个“-I”参数来指定多个目录。<br>“-j [<jobsnum>]”<br>“–jobs[=<jobsnum>]”<br>指同时运行命令的个数。如果没有这个参数，make运行命令时能运行多少就运行多少。如果有一个以上的“-j”参数，那么仅最后一个“-j”才是有效的。（注意这个参数在MS-D<br>OS中是无用的）<br>“-k”<br>“–keep-going”<br>出错也不停止运行。如果生成一个目标失败了，那么依赖于其上的目标就不会被执行了。<br>“-l <load>”<br>“–load-average[=&lt;load]”<br>“—max-load[=<load>]”<br>指定make运行命令的负载。<br>“-n”<br>“–just-print”<br>“–dry-run”<br>“–recon”<br>仅输出执行过程中的命令序列，但并不执行。<br>“-o <file>”<br>“–old-file=<file>”<br>“–assume-old=<file>”<br>不重新生成的指定的<file>，即使这个目标的依赖文件新于它。<br>“-p”<br>“–print-data-base”<br>输出makefile中的所有数据，包括所有的规则和变量。这个参数会让一个简单的makefile都会输出一堆信息。如果你只是想输出信息而不想执行 makefile，你可以使用“make -q<br>p”命令。如果你想查看执行makefile前的预设变量和规则，你可以使用“make –p –f /dev/null”。这个参数输出的信息会包含着你的makefile文件的文件名和行号，所以，用<br>这个参数来调试你的makefile会是很有用的，特别是当你的环境变量很复杂的时候。<br>“-q”<br>“–question”<br>不运行命令，也不输出。仅仅是检查所指定的目标是否需要更新。如果是0则说明要更新，如果是2则说明有错误发生。<br>“-r”<br>“–no-builtin-rules”<br>禁止make使用任何隐含规则。<br>“-R”<br>“–no-builtin-variabes”<br>禁止make使用任何作用于变量上的隐含规则。<br>“-s”<br>“–silent”<br>“–quiet”<br>在命令运行时不输出命令的输出。<br>“-S”<br>“–no-keep-going”<br>“–stop”<br>取消“-k”选项的作用。因为有些时候，make的选项是从环境变量“MAKEFLAGS”中继承下来的。所以你可以在命令行中使用这个参数来让环境变量中的“-k”选项失效。<br>“-t”<br>“–touch”<br>相当于UNIX的touch命令，只是把目标的修改日期变成最新的，也就是阻止生成目标的命令运行。<br>“-v”<br>“–version”<br>输出make程序的版本、版权等关于make的信息。<br>“-w”<br>“–print-directory”<br>输出运行makefile之前和之后的信息。这个参数对于跟踪嵌套式调用make时很有用。<br>“–no-print-directory”<br>禁止“-w”选项。<br>“-W <file>”<br>“–what-if=<file>”<br>“–new-file=<file>”<br>“–assume-file=<file>”<br>假定目标<file>需要更新，如果和“-n”选项使用，那么这个参数会输出该目标更新时的运行动作。如果没有“-n”那么就像运行UNIX的“touch”命令一样，使得<file>的修改时间为当前时间。<br>“–warn-undefined-variables”<br>只要make发现有未定义的变量，那么就输出警告信息。<br><strong>隐含规则</strong>在我们使用Makefile时，有一些我们会经常使用，而且使用频率非常高的东西，比如，我们编译C/C++的源程序为中间目标文件（Unix下是[.o] 文件，Windows下是[.obj]文件）。本章讲述的就是一些在Makefile中的“隐含的”，早先约定了的，不需要我们再写出来的规则。“隐含规则”也就是一种惯例，make会按照这种“惯例”心照不喧地来运行，那怕我们的Makefile中没有书写这样的规则。例如，把[.c]文件编译成[.o]文件这一规则，你根本就不用写出来，make会自动推导出这种规则，并生成我们需要的[.o]文件。“隐含规则”会使用一些我们系统变量，我们可以改变这些系统变量的值来定制隐含规则的运行时的参数。如系统变量“CFLAGS”可以控制编译时的编译器参数。我们还可以通过“模式规则”的方式写下自己的隐含规则。用“后缀规则”来定义隐含规则会有许多的限制。使用“模式规则”会更回得智能和清楚，但“后缀规则”可以用来保证我们Makefile的兼容性。我们了解了“隐含规则”，可以让其为我们更好的服务，也会让我们知道一些“约定俗成”了的东西，而不至于使得我们在运行Makefile时出现一些我们觉得莫名其妙的东西。当然，任何事物都是矛盾的，水能载舟，亦可覆舟，所以，有时候“隐含规则”也会给我们造成不小的麻烦。只有了解了它，我们才能更好地使用它。<strong>一、使用隐含规则</strong><br>如果要使用隐含规则生成你需要的目标，你所需要做的就是不要写出这个目标的规则。那么，make会试图去自动推导产生这个目标的规则和命令，如果make可以自动推导生成这个目标的规则和命令，那么这个行为就是隐含规则的自动推导。当然，隐含规则是make事先约定好的一些东西。例如，我们有下面的一个Makefile：<br>foo : foo.o bar.o<br>cc –o foo foo.o bar.o $(CFLAGS) $(LDFLAGS)<br>我们可以注意到，这个Makefile中并没有写下如何生成foo.o和bar.o这两目标的规则和命令。因为make的“隐含规则”功能会自动为我们自动去推导这两个目标的依赖目标和生成命令。<br>make 会在自己的“隐含规则”库中寻找可以用的规则，如果找到，那么就会使用。如果找不到，那么就会报错。在上面的那个例子中，make调用的隐含规则是，把 [.o]的目标的依赖文件置成[.c]，并使用C的编译命令“cc –c$(CFLAGS) [.c]”来生成[.o]的目标。也就是说，我们完全没有必要写下下面的两条规则：<br>foo.o : foo.c<br>cc –c foo.c $(CFLAGS)<br>bar.o : bar.c<br>cc –c bar.c $(CFLAGS)<br>因为，这已经是“约定”好了的事了，make和我们约定好了用C编译器“cc”生成[.o]文件的规则，这就是隐含规则。当然，如果我们为[.o]文件书写了自己的规则，那么make就不会自动推导并调用隐含规则，它会按照我们写好的规则忠实地执行。还有，在make的“隐含规则库”中，每一条隐含规则都在库中有其顺序，越靠前的则是越被经常使用的，所以，这会导致我们有些时候即使我们显示地指定了目标依赖，make也不会管。如下面这条规则（没有命令）：<br>foo.o : foo.p<br>依赖文件“foo.p”（Pascal程序的源文件）有可能变得没有意义。如果目录下存在了“foo.c”文件，那么我们的隐含规则一样会生效，并会通过 “foo.c”调用C的编译器生成foo.o文件。因为，在隐含规则中，Pascal的规则出现在C的规则之后，所以，make找到可以生成foo.o的 C的规则就不再寻找下一条规则了。如果你确实不希望任何隐含规则推导，那么，你就不要只写出“依赖规则”，而不写命令。<strong>二、隐含规则一览</strong><br>这里我们将讲述所有预先设置（也就是make内建）的隐含规则，如果我们不明确地写下规则，那么，make就会在这些规则中寻找所需要规则和命令。当然，我们也可以使用make的参数“-r”或“–no-builtin-rules”选项来取消所有的预设置的隐含规则。<br>当然，即使是我们指定了“-r”参数，某些隐含规则还是会生效，因为有许多的隐含规则都是使用了“后缀规则”来定义的，所以，只要隐含规则中有“后缀列表 ”（也就一系统定义在目标.SUFFIXES的依赖目标），那么隐含规则就会生效。默认的后缀列是：.out,.a, .ln, .o, .c, .cc, .C, .p, .f, .F, .r, .y, .l, .s, .S, .mod,.sym, .def, .h, .info, .dvi, .tex, .texinfo, .texi, .txinfo, .w, .ch .web, .sh,.elc, .el。具体的细节，我们会在后面讲述。<br>还是先来看一看常用的隐含规则吧。<br>1、编译C程序的隐含规则。<br>“<n>.o”的目标的依赖目标会自动推导为“<n>.c”，并且其生成命令是“$(CC) –c $(CPPFLAGS)$(CFLAGS)”<br>2、编译C++程序的隐含规则。<br>“<n>.o” 的目标的依赖目标会自动推导为“<n>.cc”或是“<n>.C”，并且其生成命令是“$(CXX) –c $(CPPFLAGS) $(CFLAGS)”。（建议使用“.cc”作为C++源文件的后缀，而不是“.C”）<br>3、编译Pascal程序的隐含规则。<br>“<n>.o”的目标的依赖目标会自动推导为“<n>.p”，并且其生成命令是“$(PC) –c $(PFLAGS)”。<br>4、编译Fortran/Ratfor程序的隐含规则。<br>“<n>.o”的目标的依赖目标会自动推导为“<n>.r”或“<n>.F”或“<n>.f”，并且其生成命令是:<br>“.f” “$(FC) –c $(FFLAGS)”<br>“.F” “$(FC) –c $(FFLAGS) $(CPPFLAGS)”<br>“.f” “$(FC) –c $(FFLAGS) $(RFLAGS)”<br>5、预处理Fortran/Ratfor程序的隐含规则。<br>“<n>.f”的目标的依赖目标会自动推导为“<n>.r”或“<n>.F”。这个规则只是转换Ratfor或有预处理的Fortran程序到一个标准的Fortran程序。其使用的命令是：<br>“.F” “$(FC) –F $(CPPFLAGS) $(FFLAGS)”<br>“.r” “$(FC) –F $(FFLAGS) $(RFLAGS)”<br>6、编译Modula-2程序的隐含规则。<br>“<n>.sym” 的目标的依赖目标会自动推导为“<n>.def”，并且其生成命令是：“$(M2C) $(M2FLAGS)$(DEFFLAGS)”。“&lt;n.o&gt;” 的目标的依赖目标会自动推导为“<n>.mod”，<br>并且其生成命令是：“$(M2C) $(M2FLAGS) $(MODFLAGS)”。<br>7、汇编和汇编预处理的隐含规则。<br>“<n>.o” 的目标的依赖目标会自动推导为“<n>.s”，默认使用编译品“as”，并且其生成命令是：“$(AS) $(ASFLAGS)”。“<n>.s” 的目标的依赖目标会自动推导为“<n>.S”<br>，默认使用C预编译器“cpp”，并且其生成命令是：“$(AS) $(ASFLAGS)”<br>8、链接Object文件的隐含规则。<br>“<n>” 目标依赖于“<n>.o”，通过运行C的编译器来运行链接程序生成（一般是“ld”），其生成命令是：“$(CC) $(LDFLAGS) <n>.o $(LOADLIBES) $(LDLIBS)”。这个规则对于只有一个源文件的工程有效，同时也对多个Object文件（由不同的源文件生成）的也有效。例如如下规则：<br>x : y.o z.o<br>并且“x.c”、“y.c”和“z.c”都存在时，隐含规则将执行如下命令：<br>cc -c x.c -o x.o<br>cc -c y.c -o y.o<br>cc -c z.c -o z.o<br>cc x.o y.o z.o -o x<br>rm -f x.o<br>rm -f y.o<br>rm -f z.o<br>如果没有一个源文件（如上例中的x.c）和你的目标名字（如上例中的x）相关联，那么，你最好写出自己的生成规则，不然，隐含规则会报错的。<br>9、Yacc C程序时的隐含规则。<br>“<n>.c”的依赖文件被自动推导为“n.y”（Yacc生成的文件），其生成命令是：“$(YACC) $(YFALGS)”。（“Yacc”是一个语法分析器，关于其细节请查看相关资料）<br>10、Lex C程序时的隐含规则。<br>“<n>.c”的依赖文件被自动推导为“n.l”（Lex生成的文件），其生成命令是：“$(LEX) $(LFALGS)”。（关于“Lex”的细节请查看相关资料）<br>11、Lex Ratfor程序时的隐含规则。<br>“<n>.r”的依赖文件被自动推导为“n.l”（Lex生成的文件），其生成命令是：“$(LEX<br>) $(LFALGS)”。<br>12、从C程序、Yacc文件或Lex文件创建Lint库的隐含规则。<br>“<n>.ln” （lint生成的文件）的依赖文件被自动推导为“n.c”，其生成命令是：“$(LINT) $(LINTFALGS)$(CPPFLAGS) -i”。对于“<n>.y”和“<n>.l”也是同样的规则。<br><strong>三、隐含规则使用的变量</strong>在隐含规则中的命令中，基本上都是使用了一些预先设置的变量。你可以在你的makefile中改变这些变量的值，或是在make的命令行中传入这些值，或是在你的环境变量中设置这些值，无论怎么样，只要设置了这些特定的变量，那么其就会对隐含规则起作用。当然，你也可以利用make的“-R”或“–no–builtin-variables”参数来取消你所定义的变量对隐含规则的作用。<br>例如，第一条隐含规则——编译C程序的隐含规则的命令是“$(CC)–c $(CFLAGS) $(CPPFLAGS)”。Make默认的编译命令是“cc”，如果你把变量“$(CC)”重定义成“gcc”，把变量“$(CFLAGS)”重定义成 “-g”，那么，隐含规则中的命令全部会以“gcc –c -g $(CPPFLAGS)”的样子来执行了。<br>我们可以把隐含规则中使用的变量分成两种：一种是命令相关的，如“CC”；一种是参数相的关，如“CFLAGS”。下面是所有隐含规则中会用到的变量：<br><strong>1、关于命令的变量。</strong><br>AR   函数库打包程序。默认命令是“ar”。<br>AS<br>汇编语言编译程序。默认命令是“as”。<br>CC<br>C语言编译程序。默认命令是“cc”。<br>CXX<br>C++语言编译程序。默认命令是“g++”。<br>CO<br>从 RCS文件中扩展文件程序。默认命令是“co”。<br>CPP<br>C程序的预处理器（输出是标准输出设备）。默认命令是“$(CC) –E”。<br>FC<br>Fortran 和 Ratfor 的编译器和预处理程序。默认命令是“f77”。<br>GET<br>从SCCS文件中扩展文件的程序。默认命令是“get”。<br>LEX<br>Lex方法分析器程序（针对于C或Ratfor）。默认命令是“lex”。<br>PC<br>Pascal语言编译程序。默认命令是“pc”。<br>YACC<br>Yacc文法分析器（针对于C程序）。默认命令是“yacc”。<br>YACCR<br>Yacc文法分析器（针对于Ratfor程序）。默认命令是“yacc –r”。<br>MAKEINFO<br>转换Texinfo源文件（.texi）到Info文件程序。默认命令是“makeinfo”。<br>TEX<br>从TeX源文件创建TeX DVI文件的程序。默认命令是“tex”。<br>TEXI2DVI<br>从Texinfo源文件创建军TeX DVI 文件的程序。默认命令是“texi2dvi”。<br>WEAVE<br>转换Web到TeX的程序。默认命令是“weave”。<br>CWEAVE<br>转换CWeb 到 TeX的程序。默认命令是“cweave”。<br>TANGLE<br>转换Web到Pascal语言的程序。默认命令是“tangle”。<br>CTANGLE<br>转换CWeb 到 C。默认命令是“ctangle”。<br>RM<br>删除文件命令。默认命令是“rm –f”。<strong>2、关于命令参数的变量</strong>下面的这些变量都是相关上面的命令的参数。如果没有指明其默认值，那么其默认值都是空。<br>ARFLAGS<br>函数库打包程序AR命令的参数。默认值是“rv”。<br>ASFLAGS<br>汇编语言编译器参数。（当明显地调用“.s”或“.S”文件时）。<br>CFLAGS<br>C语言编译器参数。<br>CXXFLAGS<br>C++语言编译器参数。<br>COFLAGS<br>RCS命令参数。<br>CPPFLAGS<br>C预处理器参数。（ C 和 Fortran 编译器也会用到）。<br>FFLAGS<br>Fortran语言编译器参数。<br>GFLAGS<br>SCCS “get”程序参数。<br>LDFLAGS<br>链接器参数。（如：“ld”）<br>LFLAGS<br>Lex文法分析器参数。<br>PFLAGS<br>Pascal语言编译器参数。<br>RFLAGS<br>Ratfor 程序的Fortran 编译器参数。<br>YFLAGS<br>Yacc文法分析器参数。<strong>四、隐含规则链</strong>有些时候，一个目标可能被一系列的隐含规则所作用。例如，一个[.o]的文件生成，可能会是先被Yacc的[.y]文件先成[.c]，然后再被C的编译器生成。我们把这一系列的隐含规则叫做“隐含规则链”。<br>在上面的例子中，如果文件[.c]存在，那么就直接调用C的编译器的隐含规则，如果没有[.c]文件，但有一个[.y]文件，那么Yacc的隐含规则会被调用，生成[.c]文件，然后，再调用C编译的隐含规则最终由[.c]生成[.o]文件，达到目标。我们把这种[.c]的文件（或是目标），叫做中间目标。不管怎么样，make会努力自动推导生成目标的一切方法，不管中间目标有多少，其都会执着地把所有的隐含规则和你书写的规则全部合起来分析，努力达到目标，所以，有些时候，可能会让你觉得奇怪，怎么我的目标会这样生成？怎么我的makefile发疯了？<br>在默认情况下，对于中间目标，它和一般的目标有两个地方所不同：第一个不同是除非中间的目标不存在，才会引发中间规则。第二个不同的是，只要目标成功产生，那么，产生最终目标过程中，所产生的中间目标文件会被以“rm -f”删除。通常，一个被makefile指定成目标或是依赖目标的文件不能被当作中介。然而，你可以明显地说明一个文件或是目标是中介目标，你可以使用伪目标“.INTERMEDIATE”来强制声明。（如：.INTERMEDIATE ： mid ）你也可以阻止make自动删除中间目标，要做到这一点，你可以使用伪目标“.SECONDARY”来强制声明（如：.SECONDARY : sec）。你还可以把你的目标，以模式的方式来指定（如：%.o）成伪目标“.PRECIOUS”的依赖目标，以保存被隐含规则所生成的中间文件。<br>​    在“隐含规则链”中，禁止同一个目标出现两次或两次以上，这样一来，就可防止在make自动推导时出现无限递归的情况。<br>Make 会优化一些特殊的隐含规则，而不生成中间文件。如，从文件“foo.c”生成目标程序“foo”，按道理，make会编译生成中间文件“foo.o”，然后链接成“foo”，但在实际情况下，这一动作可以被一条“cc”的命令完成（cc –o foo foo.c），于是优化过的规则就不会生成中间文件。<br><strong>五、定义模式规则</strong>你可以使用模式规则来定义一个隐含规则。一个模式规则就好像一个一般的规则，只是在规则中，目标的定义需要有”%”字符。”%”的意思是表示一个或多个任意字符。在依赖目标中同样可以使用”%”，只是依赖目标中的”%”的取值，取决于其目标。<br>有一点需要注意的是，”%”的展开发生在变量和函数的展开之后，变量和函数的展开发生在make载入Makefile时，而模式规则中的”%”则发生在运行时。<br><strong>1、模式规则介绍</strong><br>   模式规则中，至少在规则的目标定义中要包含”%”，否则，就是一般的规则。目标中的”%”定义表示对文件名的匹配，”%”表示长度任意的非空字符串。例如：”%.c”表示以”.c”结尾的文件名（文件名的长度至少为3），而”s.%.c”则表示以”s.”开头，”.c”结尾的文件名（文件名的长度至少为 5）。<br>如果”%”定义在目标中，那么，目标中的”%”的值决定了依赖目标中的”%”的值，也就是说，目标中的模式的”%”决定了依赖目标中”%”的样子。例如有一个模式规则如下：<br>%.o : %.c ; <command ......=""><br>其含义是，指出了怎么从所有的[.c]文件生成相应的[.o]文件的规则。如果要生成的目标是”a.o b.o”，那么”%c”就是”a.c b.c”。一旦依赖目标中的”%”模式被确定，那么，make会被要求去匹配当前目录下所有的文件名，一旦找到，make就会规则下的命令，所以，在模式规则中，目标可能会是多个的，如果有模式匹配出多个目标，make就会产生所有的模式目标，此时，make关心的是依赖的文件名和生成目标的命令这两件事。<br><strong>2、模式规则示例</strong><br>下面这个例子表示了,把所有的[.c]文件都编译成[.o]文件.<br>%.o : %.c<br>$(CC) -c $(CFLAGS) $(CPPFLAGS) $&lt; -o $@<br>其中，”$@”表示所有的目标的挨个值，”$&lt;”表示了所有依赖目标的挨个值。这些奇怪的变量我们叫”自动化变量”，后面会详细讲述。<br>下面的这个例子中有两个目标是模式的：<br>%.tab.c %.tab.h: %.y<br>bison -d $&lt;<br>这条规则告诉make把所有的[.y]文件都以”bison -d <n>.y”执行，然后生成”<n>.tab.c”和”<n>.tab.h”文件。（其中，”<n>“ 表示一个任意字符串）。如果我们的执行程序”foo”依赖于文件”parse.tab.o”和”scan.o”，并且文件”scan.o”依赖于文件”parse.tab.h”，如果”parse.y”文件被更新了，那么根据上述的规则，”bison-d parse.y”就会被执行一次，于是，”parse.tab.o”和”scan.o”的依赖文件就齐了。（假设，”parse.tab.o”由”parse.tab.c”生成，和”scan.o”由”scan.c”生成，而”foo”由”parse.tab.o”和”scan.o”链接生成，<br>而且foo和其[.o]文件的依赖关系也写好，那么，所有的目标都会得到满足）<br><strong>3、自动化变量</strong><br>在上述的模式规则中，目标和依赖文件都是一系例的文件，那么我们如何书写一个命令来完成从不同的依赖文件生成相应的目标？因为在每一次的对模式规则的解析时，都会是不同的目标和依赖文件。自动化变量就是完成这个功能的。在前面，我们已经对自动化变量有所提涉，相信你看到这里已对它有一个感性认识了。所谓自动化变量，就是这种变量会把模式中所定义的一系列的文件自动地挨个取出，直至所有的符合模式的文件都取完了。这种自动化变量只应出现在规则的命令中。<br>下面是所有的自动化变量及其说明：<br>$@<br>表示规则中的目标文件集。在模式规则中，如果有多个目标，那么，”$@”就是匹配于目标中模式定义的集合。<br>$%<br>仅当目标是函数库文件中，表示规则中的目标成员名。例如，如果一个目标是”foo.a(bar.o)”，那么，”$%”就是”bar.o”，”$@”就是”foo.a”。如果目标不是函数库文件（Unix下是<br>[.a]，Windows下是[.lib]），那么，其值为空。<br>$&lt;<br>依赖目标中的第一个目标名字。如果依赖目标是以模式（即”%”）定义的，那么”$&lt;”将是符合模式的一系列的文件集。注意，其是一个一个取出来的。<br>$?<br>所有比目标新的依赖目标的集合。以空格分隔。<br>$^<br>所有的依赖目标的集合。以空格分隔。如果在依赖目标中有多个重复的，那个这个变量会去除重复的依赖目标，只保留一份。<br>$+<br>这个变量很像”$^”，也是所有依赖目标的集合。只是它不去除重复的依赖目标。<br>$</n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></n></file></file></file></file></file></file></file></file></file></file></load></load></jobsnum></jobsnum></dir></dir></file></file></file></options></options></dir></dir></file></file></file></file></text></text></text></em><br>这个变量表示目标模式中”%”及其之前的部分。如果目标是”dir/a.foo.b”，并且目标的模式是”a.%.b”，那么，”$<em>“的值就是”dir /a.foo”。这个变量对于构造有关联的文件名是比<br>较有较。如果目标中没有模式的定义，那么”$</em>“也就不能被推导出，但是，如果目标文件的后缀是 make所识别的，那么”$<em>“就是除了后缀的那一部分。例如：如果目标是”foo.c”，因为”.c”是make所能识别的后缀名，所以，”$</em>“的值就是”foo”。这个特性是GNU make的，很有可能不兼容于其它版本的make，所以，你应该尽量避免使用”$<em>“，除非是在隐含规则或是静态模式中。如果目标中的后缀是make所不能识别的，那么”$</em>“就是空值。当你希望只对更新过的依赖文件进行操作时，”$?”在显式规则中很有用，例如，假设有一个函数库文件叫”lib”，其由其它几个object文件更新。那么把object文件打包的比较有效率的Makefile规则是：<br>lib : foo.o bar.o lose.o win.o<br>ar r lib $?<br>在上述所列出来的自动量变量中。四个变量（$@、$&lt;、$%、$<em>）在扩展时只会有一个文件，而另三个的值是一个文件列表。这七个自动化变量还可以取得文件的目录名或是在当前目录下的符合模式的文件名，只需要搭配上”D”或”F”字样。这是GNU make中老版本的特性，在新版本中，我们使用函数”dir”或”notdir”就可以做到了。”D”的含义就是Directory，就是目录，”F”的含义就是File，就是文件。<br>下面是对于上面的七个变量分别加上”D”或是”F”的含义：<br>$(@D)<br>表示”$@”的目录部分（不以斜杠作为结尾），如果”$@”值是”dir/foo.o”，那么”$(@D)”就是”dir”，而如果”$@”中没有包含斜杠的话，其值就是”.”（当前目录）。<br>$(@F)<br>表示”$@”的文件部分，如果”$@”值是”dir/foo.o”，那么”$(@F)”就是”foo.o”，”$(@F)”相当于函数”$(notdir$@)”。<br>“$(</em>D)”<br>“$(<em>F)”<br>和上面所述的同理，也是取文件的目录部分和文件部分。对于上面的那个例子，”$(</em>D)”返回”dir”，而”$(<em>F)”返回”foo”<br>“$(%D)”<br>“$(%F)”<br>分别表示了函数包文件成员的目录部分和文件部分。这对于形同”archive(member)”形式的目标中的”member”中包含了不同的目录很有用。<br>“$(&lt;D)”<br>“$(&lt;F)”<br>分别表示依赖文件的目录部分和文件部分。<br>“$(^D)”<br>“$(^F)”<br>分别表示所有依赖文件的目录部分和文件部分。（无相同的）<br>“$(+D)”<br>“$(+F)”<br>分别表示所有依赖文件的目录部分和文件部分。（可以有相同的）<br>“$(?D)”<br>“$(?F)”<br>分别表示被更新的依赖文件的目录部分和文件部分。<br>最后想提醒一下的是，对于”$&lt;”，为了避免产生不必要的麻烦，我们最好给$后面的那个特定字符都加上圆括号，比如，”$(&lt; )”就要比”$&lt;”要好一些。还得要注意的是，这些变量只使用在规则的命令中，而且一般都是”显式规则”和”静态模式规则”（参见前面”书写规则”一章）。其在隐含规则中并没有意义。<br><strong>4、模式的匹配</strong>一般来说，一个目标的模式有一个有前缀或是后缀的”%”，或是没有前后缀，直接就是一个”%”。因为”%”代表一个或多个字符，所以在定义好了的模式中，我们把”%”所匹配的内容叫做”茎”，例如”%.c”所匹配的文件”test.c”中”test”就是”茎”。因为在目标和依赖目标中同时有”%”时，依赖目标的”茎”会传给目标，当做目标中的”茎”。<br>当一个模式匹配包含有斜杠（实际也不经常包含）的文件时，那么在进行模式匹配时，目录部分会首先被移开，然后进行匹配，成功后，再把目录加回去。在进行”茎”的传递时，我们需要知道这个步骤。例如有一个模式”e%t”，文件”src/eat” 匹配于该模式，于是”src/a”就是其”茎”，如果这个模式定义在依赖目标中，而被依赖于这个模式的目标中又有个模式”c%r”，那么，目标就是”src/car”。（”茎”被传递）<br><strong>5、重载内建隐含规则</strong><br>你可以重载内建的隐含规则（或是定义一个全新的），例如你可以重新构造和内建隐含规则不同的命令，如：<br>%.o : %.c<br>$(CC) -c $(CPPFLAGS) $(CFLAGS) -D$(date)<br>你可以取消内建的隐含规则，只要不在后面写命令就行。如：<br>%.o : %.s<br>同样，你也可以重新定义一个全新的隐含规则，其在隐含规则中的位置取决于你在哪里写下这个规则。朝前的位置就靠前。<br><strong>六、老式风格的”后缀规则”</strong>后缀规则是一个比较老式的定义隐含规则的方法。后缀规则会被模式规则逐步地取代。因为模式规则更强更清晰。为了和老版本的Makefile兼容，GNU make同样兼容于这些东西。后缀规则有两种方式：”双后缀”和”单后缀”。双后缀规则定义了一对后缀：目标文件的后缀和依赖目标（源文件）的后缀。如”.c.o”相当于”%o : %c”。单后缀规则只定义一个后缀，也就是源文件的后缀。如”.c”相当于”% : %.c”。<br>后缀规则中所定义的后缀应该是make所认识的，如果一个后缀是make所认识的，那么这个规则就是单后缀规则，而如果两个连在一起的后缀都被make所认识，那就是双后缀规则。例如：”.c”和”.o”都是make所知道。因而，如果你定义了一个规则是”.c.o”那么其就是双后缀规则，意义就是”.c”是源文件的后缀，”.o”是目标文件的后缀。如下示例：<br>.c.o:<br>$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $&lt;<br>后缀规则不允许任何的依赖文件，如果有依赖文件的话，那就不是后缀规则，那些后缀统统被认为是文件名，如：<br>.c.o: foo.h<br>$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $&lt;<br>这个例子，就是说，文件”.c.o”依赖于文件”foo.h”，而不是我们想要的这样：<br>%.o: %.c foo.h<br>$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $&lt;<br>后缀规则中，如果没有命令，那是毫无意义的。因为他也不会移去内建的隐含规则。<br>而要让make知道一些特定的后缀，我们可以使用伪目标”.SUFFIXES”来定义或是删除，如：.SUFFIXES:.hack .win<br>把后缀.hack和.win加入后缀列表中的末尾。<br>.SUFFIXES: # 删除默认的后缀<br>.SUFFIXES: .c .o .h # 定义自己的后缀<br>先清楚默认后缀，后定义自己的后缀列表。<br>make的参数”-r”或”-no-builtin-rules”也会使用得默认的后缀列表为空。而变量”SUFFIXE”被用来定义默认的后缀列表，你可以用”.SUFFIXES”来改变后缀列表，但请不要改变变量”SUFFIXE”的值。<strong>七、隐含规则搜索算法</strong>比如我们有一个目标叫 T。下面是搜索目标T的规则的算法。请注意，在下面，我们没有提到后缀规则，原因是，所有的后缀规则在Makefile被载入内存时，会被转换成模式规则。如果目标是”archive(member)”的函数库文件模式，那么这个算法会被运行两次，第一次是找目标T，如果没有找到的话，那么进入第二次，第二次会把”member”当作T来搜索。1、把T的目录部分分离出来。叫D，而剩余部分叫N。（如：如果T是”src/foo.o”，那么，D就是”src/“，N就是”foo.o”）2、创建所有匹配于T或是N的模式规则列表。3、如果在模式规则列表中有匹配所有文件的模式，如”%”，那么从列表中移除其它的模式。4、移除列表中没有命令的规则。5、对于第一个在列表中的模式规则：1）推导其”茎”S，S应该是T或是N匹配于模式中”%”非空的部分。2）计算依赖文件。把依赖文件中的”%”都替换成”茎”S。如果目标模式中没有包含斜框字符，而把D加在第一个依赖文件的开头。3）测试是否所有的依赖文件都存在或是理当存在。（如果有一个文件被定义成另外一个规则的目标文件，或者是一个显式规则的依赖文件，那么这个文件就叫”理当存在”）4）如果所有的依赖文件存在或是理当存在，或是就没有依赖文件。那么这条规则将被采用，退出该<a href="http://lib.csdn.net/base/datastructure" target="_blank" rel="noopener"><strong>算法</strong></a>。6、如果经过第5步，没有模式规则被找到，那么就做更进一步的搜索。对于存在于列表中的第一个模式规则：1）如果规则是终止规则，那就忽略它，继续下一条模式规则。2）计算依赖文件。（同第5步）3）测试所有的依赖文件是否存在或是理当存在。4）对于不存在的依赖文件，递归调用这个算法查找他是否可以被隐含规则找到。5）如果所有的依赖文件存在或是理当存在，或是就根本没有依赖文件。那么这条规则被采用，退出该算法。7、如果没有隐含规则可以使用，查看”.DEFAULT”规则，如果有，采用，把”.DEFAULT”的命令给T使用。<br>一旦规则被找到，就会执行其相当的命令，而此时，我们的自动化变量的值才会生成。<br><strong>使用make更新函数库文件</strong>函数库文件也就是对Object文件（程序编译的中间文件）的打包文件。在Unix下，一般是由命令”ar”来完成打包工作。<br><strong>一、函数库文件的成员</strong>一个函数库文件由多个文件组成。你可以以如下格式指定函数库文件及其组成：<br>archive(member)<br>这个不是一个命令，而一个目标和依赖的定义。一般来说，这种用法基本上就是为了”ar”命令来服务的。如：<br>foolib(hack.o) : hack.o<br>ar cr foolib hack.o<br>如果要指定多个member，那就以空格分开，如：<br>foolib(hack.o kludge.o)<br>其等价于：<br>foolib(hack.o) foolib(kludge.o)<br>你还可以使用Shell的文件通配符来定义，如：<br>foolib(</em>.o)<br><strong>二、函数库成员的隐含规则</strong><br>当 make搜索一个目标的隐含规则时，一个特殊的特性是，如果这个目标是”a(m)”形式的，其会把目标变成”(m)”。于是，如果我们的成员是”%.o” 的模式定义，并且如果我们使用”makefoo.a(bar.o)”的形式调用Makefile时，隐含规则会去找”bar.o”的规则，如果没有定义bar.o的规则，那么内建隐含规则生效，make会去找bar.c文件来生成bar.o，如果找得到的话，make执行的命令大致如下：<br>cc -c bar.c -o bar.o<br>ar r foo.a bar.o<br>rm -f bar.o<br>还有一个变量要注意的是”$%”，这是专属函数库文件的自动化变量，有关其说明请参见”自动化变量”一节。<br><strong>三、函数库文件的后缀规则</strong><br>你可以使用”后缀规则”和”隐含规则”来生成函数库打包文件，如：<br>.c.a:<br>$(CC) $(CFLAGS) $(CPPFLAGS) -c $&lt; -o $<em>.o<br>$(AR) r $@ $</em>.o<br>$(RM) $<em>.o<br>其等效于：<br>(%.o) : %.c<br>$(CC) $(CFLAGS) $(CPPFLAGS) -c $&lt; -o $</em>.o<br>$(AR) r $@ $<em>.o<br>$(RM) $</em>.o<strong>四、注意事项</strong><br>在进行函数库打包文件生成时，请小心使用make的并行机制（”-j”参数）。如果多个ar命令在同一时间运行在同一个函数库打包文件上，就很有可以损坏这个函数库文件。所以，在make未来的版本中，应该提供一种机制来避免并行操作发生在函数打包文件上。<br>但就目前而言，你还是应该不要尽量不要使用”-j”参数。<strong>后序</strong><br>终于到写结束语的时候了，以上基本上就是GNU make的Makefile的所有细节了。其它的产商的make基本上也就是这样的，无论什么样的make，都是以文件的依赖性为基础的，其基本是都是遵循一个标准的。这篇文档中80%的技术细节都适用于任何的make，我猜测”函数”那一章的内容可能不是其它make所支持的，而隐含规则方面，我想不同的make会有不同的实现，我没有精力来查看GNU的make和VC的nmake、BCB的make，或是别的UNIX下的make有些什么样的差别，一是时间精力不够，二是因为我基本上都是在Unix下使用make，以前在SCOUnix和IBM的AIX，现在在Linux、Solaris、HP-UX、AIX和Alpha下使用，Linux和Solaris下更多一点。不过，我可以肯定的是，在Unix下的make，无论是哪种平台，几乎都使用了Richard Stallman开发的make和cc/gcc的编译器，而且，基本上都是GNU的make（公司里所有的UNIX机器上都被装上了GNU的东西，所以，使用GNU的程序也就多了一些）。GNU的东西还是很不错的，特别是使用得深了以后，越来越觉得GNU的软件的强大，也越来越觉得GNU的在操作系统中（主要是Unix，甚至Windows）”杀伤力”。<br>对于上述所有的make的细节，我们不但可以利用make这个工具来编译我们的程序，还可以利用make来完成其它的工作，因为规则中的命令可以是任何Shell之下的命令，所以，在Unix下，你不一定只是使用程序语言的编译器，你还可以在Makefile中书写其它的命令，如：tar、awk、mail、sed、cvs、compress、ls、rm、yacc、rpm、 ftp……等等，等等，来完成诸如”程序打包”、”程序备份”、”制作程序安装包”、”提交代码”、”使用程序模板”、”合并文件”等等五花八门的功能，文件操作，文件管理，编程开发设计，或是其它一些异想天开的东西。比如，以前在书写银行交易程序时，由于银行的交易程序基本一样，就见到有人书写了一些交易的通用程序模板，在该模板中把一些网络通讯、数据库操作的、业务操作共性的东西写在一个文件中，在这些文件中用些诸如”@@@N、###N”奇怪字串标注一些位置，然后书写交易时，只需按照一种特定的规则书写特定的处理，最后在make时，使用awk和sed，把模板中的”@@@N、###N”等字串替代成特定的程序，形成C文件，然后再编译。这个动作很像数据库的”扩展C”语言（即在C语言中用”EXEC　SQL”的样子执行SQL语句，在用 cc/gcc编译之前，需要使用”扩展C”的翻译程序，如cpre，把其翻译成标准C）。如果你在使用make时有一些更为绝妙的方法，请记得告诉我啊。<br>回头看看整篇文档，不觉记起几年前刚刚开始在Unix下做开发的时候，有人问我会不会写Makefile时，我两眼发直，根本不知道在说什么。一开始看到别人在vi中写完程序后输入”!make”时，还以为是vi的功能，后来才知道有一个Makefile在作怪，于是上网查啊查，那时又不愿意看英文，发现就根本没有中文的文档介绍Makefile，只得看别人写的Makefile，自己瞎碰瞎搞才积累了一点知识，但在很多地方完全是知其然不知所以然。后来开始从事UNIX下产品软件的开发，看到一个400人年，近200万行代码的大工程，发现要编译这样一个庞然大物，如果没有Makefile，那会是多么恐怖的一样事啊。于是横下心来，狠命地读了一堆英文文档，才觉得对其掌握了。但发现目前网上对Makefile介绍的文章还是少得那么的可怜，所以想写这样一篇文章，共享给大家，希望能对各位有所帮助。<br>现在我终于写完了，看了看文件的创建时间，这篇技术文档也写了两个多月了。发现，自己知道是一回事，要写下来，跟别人讲述又是另外一回事，而且，现在越来越没有时间专研技术细节，所以在写作时，发现在阐述一些细节问题时很难做到严谨和精练，而且对先讲什么后讲什么不是很清楚，所以，还是参考了一些国外站点上的资料和题纲，以及一些技术书籍的语言风格，才得以完成。整篇文档的提纲是基于GNU的Makefile技术手册的提纲来书写的，并结合了自己的工作经验，以及自己的学习历程。因为从来没有写过这么长，这么细的文档，所以一定会有很多地方存在表达问题，语言歧义或是错误。因些，我迫切地得等待各位给我指证和建议，以及任何的反馈<br>最后，还是利用这个后序，介绍一下自己。我目前从事于所有Unix平台下的软件研发，主要是做分布式计算/网格计算方面的系统产品软件，并且我对于下一代的计算机革命——网格计算非常地感兴趣，对于分布式计算、P2P、Web Service、J2EE技术方向也很感兴趣，同时，对于项目实施、团队管理、项目管理也小有心得，希望同样和我战斗在“技术和管理并重”的阵线上的年轻一代，能够和我多多地交流。</variable></variable></variable></variable></variable></variable></variable></variable></variable></variable></expression></parm3></parm2></parm1></expression></parm3></parm2></parm1></expression></else-part></then-part></else-part></else-part></condition></then-part></condition></else-part></then-part></condition></else-part></then-part></condition></then-part></condition></var></var></list></var></text></list></var></text></text></text></text></var></list></text></list></var></list2></list2></list1></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/09/27/Makefile/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-使用ImageIO框架-立刻加载图片" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>1:<br>NSInteger index = indexPath.row;</p>
+<p>NSURL *imageURL = [NSURL fileURLWithPath:self.imagePaths[index]];</p>
+<p>NSDictionary *options = @{(__bridge id)kCGImageSourceShouldCache: @YES}; </p>
+<p>CGImageSourceRef source = CGImageSourceCreateWithURL((__bridge CFURLRef)imageURL, NULL);</p>
+<p>CGImageRef imageRef = CGImageSourceCreateImageAtIndex(source, 0,(__bridge CFDictionaryRef)options);</p>
+<p>UIImage *image = [UIImage imageWithCGImage:imageRef]; </p>
+<p>CGImageRelease(imageRef);</p>
+<p>CFRelease(source);</p>
+<p>2:<br>//load image<br>NSInteger index = indexPath.row;<br>NSString <em>imagePath = self.imagePaths[index];<br>UIImage </em>image = [UIImage imageWithContentsOfFile:imagePath];<br>//redraw image using device context<br>UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, YES, 0);<br>[image drawInRect:imageView.bounds];<br>image = UIGraphicsGetImageFromCurrentImageContext();<br>UIGraphicsEndImageContext();<br>//set image on main thread, but only if index still matches up<br>dispatch_async(dispatch_get_main_queue(), ^{<br>if (index == cell.tag) {<br>imageView.image = image;<br>}<br>});</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/09/26/使用ImageIO框架-立刻加载图片/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-Swift 下用 lazy 让方法只被调用一次" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Swift-下用-lazy-让方法只被调用一次"><a href="#Swift-下用-lazy-让方法只被调用一次" class="headerlink" title="Swift 下用 lazy 让方法只被调用一次"></a>Swift 下用 lazy 让方法只被调用一次</h1><p><a href="https://imtx.me/archives/2687.html" target="_blank" rel="noopener">https://imtx.me/archives/2687.html</a></p>
+<p>在写 Swift 的过程中，我们会经常使用 lazy 来延迟一个对象的初始化。今天我发现了一个关于 lazy 的新的用法，也就用 lazy 来达到使「方法」只被调用一次，而不仅限于用在「对象」上。</p>
+<p>lazy 常常用在一个对象需要延迟加载、或者初始化它的时候，要求 self 已经初始化成功的情况，比如：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">lazy</span> <span class="keyword">var</span> shareItem: <span class="type">UIBarButtonItem</span> = <span class="type">UIBarButtonItem</span>(barButtonSystemItem: .action, target: <span class="keyword">self</span>, action: #selector(<span class="type">ProfileViewController</span>.share))</span><br></pre></td></tr></table></figure>
+<p>这是一种非常常用的用法，我之前在写 Swift 的时候，也只把 lazy 用在了这种对象的初始化上。事实上，lazy 也可以用在方法的调用上，不同的是，它的类型从具体的类型，变成了 Void。</p>
+<p>比如看这个例子：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">lazy</span> <span class="keyword">var</span> setupInitialLayout: <span class="type">Void</span> = &#123;</span><br><span class="line">        <span class="comment">// Do some layout and no need to return something</span></span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">func</span> <span class="title">viewDidLayoutSubviews</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.viewDidLayoutSubviews()</span><br><span class="line"></span><br><span class="line">        <span class="number">_</span> = <span class="keyword">self</span>.setupInitialLayout</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面这个例子使用 lazy，修饰了一个「Void」对象，即：它也是一个执行过程，但它不会返回一个对象。我用它来做一些一次性的 layout 相关的动作，放在比如 viewDidLayoutSubviews 这样的位置，通过 _ = self.setupInitialLayout 的形式调用它。</p>
+<p>之后，无论你的 ViewController 发生了啥变化，setupInitialLayout 这个方法再也不会被调用到了。</p>
+<p>这种用法算一个 trick，但无疑是非常简单好用的。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/09/25/Swift 下用 lazy 让方法只被调用一次/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-swift 防止按钮重复点击（时间等候模式:事件完成模式）" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="swift-防止按钮重复点击（时间等候模式-事件完成模式）"><a href="#swift-防止按钮重复点击（时间等候模式-事件完成模式）" class="headerlink" title="swift 防止按钮重复点击（时间等候模式/事件完成模式）"></a>swift 防止按钮重复点击（时间等候模式/事件完成模式）</h2><p>关于UIButton重复点击,网上提供了很详细的设置规定时间防止重复点击的方案。但在实际项目中我们常遇到button点击异步网络请求的问题，这时我们不能知晓具体时间时最好能有变量设置判断是否允许点击，很简单的if判断就OK了</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//MARK: 防止按钮重复点击</span></span><br><span class="line"><span class="keyword">let</span> defaultDuration = <span class="number">3.0</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">extension</span> <span class="title">UIButton</span></span>&#123;</span><br><span class="line">    <span class="meta">@objc</span> <span class="function"><span class="keyword">func</span> <span class="title">my_sendAction</span><span class="params">(action: Selector, to target: AnyObject?, forEvent event: UIEvent?)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">self</span>.isKind(of: <span class="type">UIButton</span>.<span class="keyword">self</span>)) &#123;</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">switch</span> <span class="keyword">self</span>.repeatButtonClickType &#123;</span><br><span class="line">            <span class="keyword">case</span> .durationTime:</span><br><span class="line">                clickDurationTime = clickDurationTime == <span class="number">0</span> ? defaultDuration : clickDurationTime</span><br><span class="line">                </span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> isIgnoreEvent &#123;</span><br><span class="line">                    <span class="keyword">return</span></span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> clickDurationTime &gt; <span class="number">0</span> &#123;</span><br><span class="line">                    isIgnoreEvent = <span class="literal">true</span></span><br><span class="line">                    <span class="comment">// 在过了我们设置的duration之后，再将isIgnoreEvent置为false</span></span><br><span class="line">                    <span class="type">DispatchQueue</span>.global(qos: .<span class="keyword">default</span>).asyncAfter(deadline: <span class="type">DispatchTime</span>.now() + clickDurationTime) &#123;</span><br><span class="line">                        </span><br><span class="line">                        </span><br><span class="line">                        <span class="keyword">self</span>.isIgnoreEvent = <span class="literal">false</span></span><br><span class="line">                    &#125;</span><br><span class="line">                    </span><br><span class="line">                    <span class="type">DispatchQueue</span>.main.asyncAfter(deadline: <span class="type">DispatchTime</span>.now() + clickDurationTime) &#123;</span><br><span class="line">                        <span class="keyword">self</span>.isIgnoreEvent = <span class="literal">false</span></span><br><span class="line">                    &#125;</span><br><span class="line">                    </span><br><span class="line">                    </span><br><span class="line">                    my_sendAction(action: action, to: target, forEvent: event)</span><br><span class="line">                &#125;</span><br><span class="line">                </span><br><span class="line">                </span><br><span class="line">            <span class="keyword">case</span> .enentDone:</span><br><span class="line">                </span><br><span class="line">                <span class="keyword">if</span> !isFinishEvent &#123;</span><br><span class="line">                    my_sendAction(action: action, to: target, forEvent: event)</span><br><span class="line">                    isFinishEvent = <span class="literal">true</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"> </span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            my_sendAction(action: action, to: target, forEvent: event)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">RepeatButtonClickType</span> : <span class="title">Int</span></span>&#123;</span><br><span class="line">    <span class="keyword">case</span> durationTime = <span class="number">0</span></span><br><span class="line">    <span class="keyword">case</span> enentDone</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">extension</span> <span class="title">UIButton</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="class"><span class="keyword">struct</span> <span class="title">AssociatedKeys</span> </span>&#123;</span><br><span class="line">        <span class="keyword">static</span> <span class="keyword">var</span> clickDurationTime = <span class="string">"my_clickDurationTime"</span></span><br><span class="line">        <span class="keyword">static</span> <span class="keyword">var</span> isIgnoreEvent = <span class="string">"my_isIgnoreEvent"</span></span><br><span class="line">        <span class="keyword">static</span> <span class="keyword">var</span> isFinish = <span class="string">"my_isFinish"</span></span><br><span class="line">        <span class="keyword">static</span> <span class="keyword">var</span> repeatButtonClickType = <span class="string">"repeatButtonClickType"</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> repeatButtonClickType : <span class="type">RepeatButtonClickType</span> &#123;</span><br><span class="line">        <span class="keyword">set</span> &#123;</span><br><span class="line">            objc_setAssociatedObject(<span class="keyword">self</span>, &amp;<span class="type">AssociatedKeys</span>.repeatButtonClickType, newValue <span class="keyword">as</span> <span class="type">RepeatButtonClickType</span>, .<span class="type">OBJC_ASSOCIATION_RETAIN_NONATOMIC</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">get</span> &#123;</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">let</span> clickDurationTime = objc_getAssociatedObject(<span class="keyword">self</span>, &amp;<span class="type">AssociatedKeys</span>.repeatButtonClickType) <span class="keyword">as</span>? <span class="type">RepeatButtonClickType</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> clickDurationTime</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">return</span> .durationTime</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 点击间隔时间</span></span><br><span class="line">    <span class="keyword">var</span> clickDurationTime : <span class="type">TimeInterval</span> &#123;</span><br><span class="line">        <span class="keyword">set</span> &#123;</span><br><span class="line">            objc_setAssociatedObject(<span class="keyword">self</span>, &amp;<span class="type">AssociatedKeys</span>.clickDurationTime, newValue <span class="keyword">as</span> <span class="type">TimeInterval</span>, .<span class="type">OBJC_ASSOCIATION_RETAIN_NONATOMIC</span>)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">get</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">let</span> clickDurationTime = objc_getAssociatedObject(<span class="keyword">self</span>, &amp;<span class="type">AssociatedKeys</span>.clickDurationTime) <span class="keyword">as</span>? <span class="type">TimeInterval</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> clickDurationTime</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> defaultDuration</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 是否忽视点击事件</span></span><br><span class="line">    <span class="keyword">var</span> isIgnoreEvent : <span class="type">Bool</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">set</span> &#123;</span><br><span class="line">            objc_setAssociatedObject(<span class="keyword">self</span>, &amp;<span class="type">AssociatedKeys</span>.isIgnoreEvent, newValue <span class="keyword">as</span> <span class="type">Bool</span>, .<span class="type">OBJC_ASSOCIATION_RETAIN_NONATOMIC</span>)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">get</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">let</span> isIgnoreEvent = objc_getAssociatedObject(<span class="keyword">self</span>, &amp;<span class="type">AssociatedKeys</span>.isIgnoreEvent) <span class="keyword">as</span>? <span class="type">Bool</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> isIgnoreEvent</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 是否完成点击事件</span></span><br><span class="line">    <span class="keyword">var</span> isFinishEvent : <span class="type">Bool</span> &#123;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">set</span> &#123;</span><br><span class="line">            objc_setAssociatedObject(<span class="keyword">self</span>, &amp;<span class="type">AssociatedKeys</span>.isFinish, newValue <span class="keyword">as</span> <span class="type">Bool</span>, .<span class="type">OBJC_ASSOCIATION_RETAIN_NONATOMIC</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">get</span> &#123;</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">let</span> isFinishEvent = objc_getAssociatedObject(<span class="keyword">self</span>, &amp;<span class="type">AssociatedKeys</span>.isFinish) <span class="keyword">as</span>? <span class="type">Bool</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> isFinishEvent</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">func</span> <span class="title">initializeOnceMethod</span>() </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span> !== <span class="type">UIButton</span>.<span class="keyword">self</span> &#123;</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">DispatchQueue</span>.once(token: <span class="string">"jcgf.swift-Carsh-test-Crash"</span>)&#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">let</span> originalSelector = #selector(<span class="type">UIButton</span>.sendAction)</span><br><span class="line">            <span class="keyword">let</span> swizzledSelector = #selector(<span class="type">UIButton</span>.my_sendAction(action:to:forEvent:))</span><br><span class="line"></span><br><span class="line">            <span class="keyword">let</span> originalMethod = class_getInstanceMethod(<span class="keyword">self</span>, originalSelector)</span><br><span class="line">            <span class="keyword">let</span> swizzledMethod = class_getInstanceMethod(<span class="keyword">self</span>, swizzledSelector)</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 运行时为类添加我们自己写的my_sendAction(_:to:forEvent:)</span></span><br><span class="line">            <span class="keyword">let</span> didAddMethod = class_addMethod(<span class="keyword">self</span>, originalSelector, method_getImplementation(swizzledMethod!), method_getTypeEncoding(swizzledMethod!))</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> didAddMethod &#123;</span><br><span class="line">                <span class="comment">// 如果添加成功，则交换方法</span></span><br><span class="line">                class_replaceMethod(<span class="keyword">self</span>, swizzledSelector, method_getImplementation(originalMethod!), method_getTypeEncoding(originalMethod!))</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// 如果添加失败，则交换方法的具体实现</span></span><br><span class="line">                method_exchangeImplementations(originalMethod!, swizzledMethod!)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">extension</span> <span class="title">DispatchQueue</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">var</span> _onceTracker = <span class="string">"Stringss"</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">func</span> <span class="title">once</span>(<span class="title">token</span>: <span class="title">String</span>, <span class="title">block</span>: () -&gt; ()) </span>&#123;</span><br><span class="line">        </span><br><span class="line">        objc_sync_enter(<span class="keyword">self</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">defer</span> &#123;</span><br><span class="line">            </span><br><span class="line">            objc_sync_exit(<span class="keyword">self</span>)</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> _onceTracker.<span class="built_in">contains</span>(token) &#123;</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        _onceTracker.append(token)</span><br><span class="line">        </span><br><span class="line">        block()</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">async</span><span class="params">(block: @escaping <span class="params">()</span></span></span>-&gt;()) &#123;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">self</span>.async(execute: block)</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">after</span><span class="params">(time: DispatchTime, block: @escaping <span class="params">()</span></span></span>-&gt;()) &#123;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">self</span>.asyncAfter(deadline: time, execute: block)</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用示例：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">func</span> <span class="title">viewDidLoad</span><span class="params">()</span></span> &#123;</span><br><span class="line">       <span class="keyword">super</span>.viewDidLoad()</span><br><span class="line"> </span><br><span class="line">       button = <span class="type">UIButton</span>.<span class="keyword">init</span>(type: .custom)</span><br><span class="line"></span><br><span class="line">       button?.frame = <span class="type">CGRect</span>(x: <span class="number">0</span>, y: <span class="number">500</span>, width: <span class="number">200</span>, height: <span class="number">50</span>)</span><br><span class="line">       button?.setTitleColor(.red, <span class="keyword">for</span>: .normal)</span><br><span class="line">       button?.setTitle(<span class="string">"haha"</span>, <span class="keyword">for</span>: .normal)</span><br><span class="line">       view.addSubview(button!)</span><br><span class="line">      </span><br><span class="line">       button?.addTarget(<span class="keyword">self</span>, action: #selector(buttonClick), <span class="keyword">for</span>: <span class="type">UIControlEvents</span>.touchUpInside)</span><br><span class="line">       <span class="type">UIButton</span>.initializeOnceMethod()</span><br><span class="line">  </span><br><span class="line">      <span class="comment">//默认是3秒内不能重复点击，加入下面代码则表示进入等待点击事件执行到输出isFinishEvent = false</span></span><br><span class="line">      button?.repeatButtonClickType = .enentDone</span><br><span class="line">       </span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line">   <span class="meta">@objc</span> <span class="function"><span class="keyword">func</span> <span class="title">buttonClick</span><span class="params">()</span></span>  &#123;</span><br><span class="line">       <span class="type">DispatchQueue</span>.global().asyncAfter(deadline: <span class="type">DispatchTime</span>.now() + <span class="number">10</span>) &#123;</span><br><span class="line">           <span class="keyword">self</span>.button?.isFinishEvent = <span class="literal">false</span></span><br><span class="line">       &#125;</span><br><span class="line">       <span class="built_in">print</span>(<span class="string">"55667"</span>)</span><br><span class="line">       </span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/09/21/swift 防止按钮重复点击（时间等候模式:事件完成模式）/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-swift4.0 Change:指针和swift变量" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>extension DispatchQueue {<br>​    private static var _onceTracker = <a href="">String</a><br>​    public class func once(token: String, block: () -&gt; ()) {<br>​        objc_sync_enter(self)<br>​        defer {<br>​            objc_sync_exit(self)<br>​        }<br>​        if _onceTracker.contains(token) {<br>​            return<br>​        }<br>​        _onceTracker.append(token)<br>​        block()<br>​    }<br>​<br>​    func async(block: @escaping ()-&gt;()) {<br>​        self.async(execute: block)<br>​    }<br>​<br>​    func after(time: DispatchTime, block: @escaping ()-&gt;()) {<br>​        self.asyncAfter(deadline: time, execute: block)<br>​    }<br>}</p>
+<ol start="2">
+<li>修改pod库<br>在Podfile文件的最下方加入如下代码，指定pod库的Swift版本为3.2(这样会使得所有的第三方pod库的Swift版本都为3.2)<br>post_install do |installer|<br>installer.pods_project.targets.each do |target|<br> target.build_configurations.each do |config|<br>​    config.build_settings[‘SWIFT_VERSION’] = ‘3.2’<br> end<br>end<br>end<br>​</li>
+</ol>
+<p>三. 项目中遇到的一些的报错问题<br>3-1. “Closure cannot implicitly capture a mutating self parameter”错误<br>在struct中，如果我们在闭包中使用self，就会得到Closure cannot implicitly capture a mutating self parameter的错误提示。比如：</p>
+<p>struct RecordModel {<br>​    /// 定义一个闭包<br>​    var action: (() -&gt; ())?<br>​    var height = 10<br>​<br>​    self.action = {<br>​        self.height = 20<br>​        //Closure cannot implicitly capture a mutating self parameter报错<br>​    }<br>}</p>
+<p>++并且由于RecordModel的类型是struct，我们也没发在action闭包里添加截获列表。那么是不是就必须使用class了？答案是否定的。有两种方式可以解决这个问题。++<br>方案一：为closure增加一个inout类型的参数</p>
+<p>struct RecordModel {<br>​    /// 定义一个闭包<br>​    var action: ((_ inSelf: inout RecordModel) -&gt; ())?<br>​    var height = 10<br>​<br>​    self.action = { (inSelf) in<br>​        inSelf.height = 20<br>​    }<br>}</p>
+<p>根据inout类型的说明，我们知道，实际上这相当于增加了一个隐藏的临时变量，self被复制，然后在closure(闭包)中使用，完成后，再复制回self。也就是说，这个方法有额外的内存开销。如果是struct较大的情形，这么做并不划算。<br>方案二：使用UnsafeMutablePointer<br>==这次采用直接指针的方式对于struct来进行操作，采用指针的好处是self不会被多次复制，性能较高。缺点是你需要自行确定你的代码的安全。==</p>
+<p>struct RecordModel {<br>​    /// 定义一个闭包<br>​    var action: (() -&gt; ())?<br>​    var height = 10<br>​<br>​    let selfPointer = UnsafeMutablePointer(&amp;self)<br>​    self.action = {<br>​        selfPointer.pointee.height = 20<br>​<br>​    }<br>}</p>
+<p>结论<br>==Closure cannot implicitly capture a mutating self parameter错误的原因是在进出closure(闭包)之后，self的一致性没办法得到保证，所以编译器默认不允许在struct的closure(闭包)中使用self。如果我们确定这么做是安全的，就可以通过上面的两种方式解决这个问题。其中，方法二的性能更好一些。==</p>
+<p>注意<br>这里可以记一下指针和swift变量之间的关系：<br>UnsafePointer对应let<br>UnsafeMutablePointer对应var<br>AutoreleasingUnsafeMutablePointer对应unowned UnsafeMutablePointer，用于inout的参数类型<br>UnsafeRawPointer对应let Any，raw系列都是对应相应的Any类型<br>UnsafeBufferPointer是non-owning的类型（unowned），用于collection的elements, buffer系列均如此</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/09/21/swift4.0 Change:指针和swift变量/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-iOS判断设备WiFi是否打开" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="iOS判断设备WiFi是否打开"><a href="#iOS判断设备WiFi是否打开" class="headerlink" title="iOS判断设备WiFi是否打开"></a>iOS判断设备WiFi是否打开</h1><p>转载    <a href="https://blog.csdn.net/u012852597/article/details/54425974" target="_blank" rel="noopener">https://blog.csdn.net/u012852597/article/details/54425974</a></p>
+<p>最近在做一个打开车类软件，当然打车软件离不开地图了,地图定位基本上都是WiFI+基站，所以把WiFi打开定位会更准备，需要判断wifi开关是否打开。其代码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">#import &lt;ifaddrs.h&gt;</span><br><span class="line">#import &lt;arpa/inet.h&gt;</span><br><span class="line">#import &lt;net/if.h&gt;</span><br><span class="line"></span><br><span class="line">- (BOOL) isWiFiEnabled &#123;</span><br><span class="line">    NSCountedSet * cset = [[NSCountedSet alloc] init];</span><br><span class="line">    struct ifaddrs *interfaces;</span><br><span class="line">    if( ! getifaddrs(&amp;interfaces) ) &#123;</span><br><span class="line">      for( struct ifaddrs *interface = interfaces; interface; interface = interface-&gt;ifa_next) &#123;</span><br><span class="line">      if ( (interface-&gt;ifa_flags &amp; IFF_UP) == IFF_UP ) &#123;</span><br><span class="line">        [cset addObject:[NSString stringWithUTF8String:interface-&gt;ifa_name]];</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">return [cset countForObject:@&quot;awdl0&quot;] &gt; 1 ? YES : NO;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据此作判断，作出相应的UI提示:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^&#123;</span><br><span class="line">BOOL isWIFI = [self isWiFiEnabled];</span><br><span class="line">if (!isWIFI) &#123;//如果WiFi没有打开，作出弹窗提示</span><br><span class="line">   static dispatch_once_t onceToken;</span><br><span class="line">   dispatch_once(&amp;onceToken, ^&#123;</span><br><span class="line">   //自己封装的一个AlertView</span><br><span class="line">   [self showWIFTRemendWithTittle:@&quot;打开wifi提高定位准确度，以便司机更快接到您。&quot; Tittle1:@&quot;是否现在开启？&quot; okTittle:@&quot;开启&quot; isHide:NO];</span><br><span class="line"></span><br><span class="line">          &#125;);</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;);</span><br></pre></td></tr></table></figure>
+<p>使用AFN的AFNetworkReachabilityManager只是监测网络状态，换句话，就是检测使用的网络是移动网络、WiFi或者是未知网络,而并不能判断WiFi硬件开关的打开。使用上面的方法判断WiFi硬件开关是否打开。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/09/14/iOS判断设备WiFi是否打开/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-隐式动画" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
   <div class="article-inner">
     
@@ -365,59 +1264,9 @@
 
 
   
-    <article id="post-ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="ios-core-animation-OC-Cube3D基于拖动手势的视图3D旋转效果"><a href="#ios-core-animation-OC-Cube3D基于拖动手势的视图3D旋转效果" class="headerlink" title="ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果"></a>ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果</h1><p>在网上看到有做html“程序员500行JavaScript开发拖拽3D盒子炫酷”，刚好最近在看《iOS核心动画高级技巧》，于是试着用OC实现一下 其中手势拖拽位置判断基于“iOS CoreAnimation专题——实战篇（四）基于拖动手势的视图3D旋转效果”：<a href="https://blog.csdn.net/u013282174/article/details/80311284" target="_blank" rel="noopener">https://blog.csdn.net/u013282174/article/details/80311284</a> （位置没有做仔细处理，有兴趣可以好好看下这篇文章研究下）</p>
-<p>地址：<a href="https://github.com/yuntiaoOS/ios_core_animation-OC-Cube3D" target="_blank" rel="noopener">https://github.com/yuntiaoOS/ios_core_animation-OC-Cube3D</a></p>
-<p><img src="https://ws3.sinaimg.cn/large/0069RVTdgy1fv6ubyroaig30do0ox1fw.gif" alt="image"></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/09/12/ios_core_animation-OC-Cube3D基于拖动手势的视图3D旋转效果/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/page/3/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span>
+      <a class="extend prev" rel="prev" href="/page/3/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/5/">Next &raquo;</a>
     </nav>
   
 
